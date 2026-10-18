@@ -25,7 +25,7 @@ CONTACT = ("BEGIN:VCARD\nVERSION:3.0\nN:Doe;Jane\nTEL:+1-555-0100\n"
 NOTES = ("Meeting notes 18 Oct: the new barcode reads at half the printed size of a QR Code in simulation. "
          "Next: field tests with printed sheets at 0.5, 1, 1.5 and 2 m, normal room light, three phones. "
          "Contact Jane Doe (jane.doe@example.com) for the test kit; budget PX-2207. Tag {tag}.")
-V2_LEVEL = "B"
+V2_LEVEL = "A"  # densest; best in every benchmark condition (bench/RESULTS_v2.md)
 SETS = [
     ("a", "Link, 53 characters", LINK, [220, 150, 105, 75, 55, 40]),
     ("b", "Contact card, 104 characters", CONTACT, [260, 180, 125, 90, 65]),

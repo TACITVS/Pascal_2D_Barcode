@@ -151,9 +151,9 @@ td.win { color: var(--ok); font-weight: 700; }
       <div class="row" id="levels-v2" hidden>
         <span class="hint" id="level2-label">Built for</span>
         <div class="seg" role="radiogroup" aria-labelledby="level2-label">
-          <label><input type="radio" name="level2" id="lv-A" value="A"><span>A sharp</span></label>
-          <label><input type="radio" name="level2" id="lv-B" value="B" checked><span>B normal</span></label>
-          <label><input type="radio" name="level2" id="lv-C" value="C"><span>C blurry</span></label>
+          <label><input type="radio" name="level2" id="lv-A" value="A" checked><span>A densest</span></label>
+          <label><input type="radio" name="level2" id="lv-B" value="B"><span>B</span></label>
+          <label><input type="radio" name="level2" id="lv-C" value="C"><span>C</span></label>
         </div>
       </div>
       <div class="symbol-stage">
@@ -198,19 +198,23 @@ td.win { color: var(--ok); font-weight: 700; }
   </div>
 
   <section class="bench" aria-labelledby="bench-h">
-    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 30 per point</span></div>
+    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 16 per size</span></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Payload</th><th>QR size</th><th>PASCAL size</th><th>Area incl. quiet zone</th><th>Smallest readable width*</th><th>Read with 6% blotted</th></tr></thead>
+        <thead><tr><th>Payload</th><th>Photo</th><th>QR Code</th><th>Standard</th><th>Dense v2</th><th>Dense vs QR area</th></tr></thead>
         <tbody>
-          <tr><td>Short link, 24 B</td><td class="num">25×25</td><td class="num">17×17</td><td class="num win">−60%</td><td class="num">QR 50 px · <b>40 px</b></td><td class="num">QR 33% · <b>83%</b></td></tr>
-          <tr><td>Link, 53 B</td><td class="num">33×33</td><td class="num">23×23</td><td class="num win">−57%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 40% · <b>90%</b></td></tr>
-          <tr><td>Wi-Fi, 52 B</td><td class="num">33×33</td><td class="num">25×25</td><td class="num win">−50%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 30% · <b>77%</b></td></tr>
-          <tr><td>Contact card, 118 B</td><td class="num">45×45</td><td class="num">35×35</td><td class="num win">−46%</td><td class="num">QR 110 px · <b>75 px</b></td><td class="num">QR 50% · <b>97%</b></td></tr>
+          <tr><td>Link, 53 B</td><td>sharp</td><td class="num">90 px</td><td class="num">36 px</td><td class="num"><b>30 px</b></td><td class="num win">9.0× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">165 px</td><td class="num">90 px</td><td class="num"><b>62 px</b></td><td class="num win">7.1× less</td></tr>
+          <tr><td>Contact card, 118 B</td><td>sharp</td><td class="num">110 px</td><td class="num">62 px</td><td class="num"><b>44 px</b></td><td class="num win">6.3× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">200 px</td><td class="num">135 px</td><td class="num"><b>90 px</b></td><td class="num win">4.9× less</td></tr>
+          <tr><td>Notes, 300 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>75 px</b></td><td class="num win">4.8× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">300 px</td><td class="num">–</td><td class="num"><b>165 px</b></td><td class="num win">3.3× less</td></tr>
+          <tr><td>Binary, 500 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>110 px</b></td><td class="num win">2.3× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">450 px</td><td class="num">–</td><td class="num"><b>245 px</b></td><td class="num win">3.4× less</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="foot">*Symbol width in camera pixels at which at least 90% of photos decode; both codes printed at the same width, level M. QR read by zxing-cpp, the engine behind many phone scanners. These are simulations (rotation, perspective, blur, noise, JPEG, lighting), not field tests with real phones. Data Matrix, an existing ISO code, needed 7–13% more area than PASCAL-MDS on these payloads. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
+    <p class="foot">Smallest printed symbol width, in camera pixels, at which at least 90% of simulated phone photos decode (rotation, perspective, lens blur 0.7 px sharp or 2.0 px blurry, noise, JPEG, uneven light). QR level M read by zxing-cpp, the engine behind many phone scanners; Standard level M; Dense level A. "–": too long for Standard. In real phone photos of a screen, Standard read 47 codes where QR read 31; Dense is in its first real-photo round. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
   </section>
 </div>
 
@@ -243,7 +247,7 @@ function drawSymbol(canvas, sym, quiet = 2) {
 
 function format() { return document.querySelector("input[name=format]:checked").value; }
 function level() { return document.querySelector(format() === "v2" ? "input[name=level2]:checked" : "input[name=level]:checked").value; }
-const V2_NOTE = { A: "sharp photos, modules ≥ 1.2 camera px", B: "normal photos, modules ≥ 1.5 camera px", C: "blurry photos, modules ≥ 2 camera px" };
+const V2_NOTE = { A: "densest; best in every test so far", B: "more redundancy per module", C: "most redundancy per module" };
 
 function makeCode() {
   const text = $("text").value;
