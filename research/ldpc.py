@@ -29,8 +29,16 @@ class IRACode:
         return self.k / self.n
 
 
-def make_ira(k: int, m: int, dv: int = 3, seed: int = 0) -> IRACode:
-    """Random IRA code avoiding repeated edges (some 4-cycles may remain)."""
+def make_ira(k: int, m: int, dv: int | None = None, seed: int = 0) -> IRACode:
+    """Random IRA code avoiding repeated edges (some 4-cycles may remain).
+
+    dv defaults to max(3, round(2m/k)), so every check gets about two
+    information edges.  With a fixed dv = 3 at low rates most checks carry
+    no information edge and the code degenerates: at rate 0.05 it needed a
+    channel of 0.456 bits/use instead of 0.155 (n = 2401, binary Gaussian).
+    """
+    if dv is None:
+        dv = max(3, round(2 * m / max(k, 1)))
     rng = np.random.default_rng(seed)
     cols = np.repeat(np.arange(k), dv)
     # spread sockets evenly over checks, then shuffle
