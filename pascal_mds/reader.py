@@ -49,7 +49,10 @@ def _box_mean(img: np.ndarray, radius: int) -> np.ndarray:
 
 
 def binarize_adaptive(gray: np.ndarray) -> np.ndarray:
-    radius = max(7, min(gray.shape) // 16)
+    # Window capped at ~65 px (like zxing's block binarizer): a window that
+    # grows with the photo can exceed a small symbol on a dark page and pull
+    # its threshold down.  Large symbols are covered by the detection pyramid.
+    radius = max(7, min(32, min(gray.shape) // 16))
     mean = _box_mean(gray, radius)
     return gray < mean - 6.0
 
@@ -420,6 +423,49 @@ def sample_modules(gray: np.ndarray, h: np.ndarray, n: int):
     return bits, conf, float(np.median(llev - dlev))
 
 
+def equalized_modules(gray: np.ndarray, h: np.ndarray, n: int):
+    """Second reading of the modules: a 3 x 3 linear equalizer learned per
+    photo by least squares from the known frame and the quiet-zone ring.
+
+    It absorbs what a fixed threshold cannot: phone sharpening halos, screen
+    texture and blur that spill neighbouring modules into each other.
+    Returns (bits, confidence) like sample_modules, or None."""
+    pad = 2
+    m = n + 2 * pad
+    cy, cx = np.mgrid[-pad:n + pad, -pad:n + pad] + 0.5
+    acc = np.zeros((m, m))
+    for oy in (-0.18, 0.0, 0.18):
+        for ox in (-0.18, 0.0, 0.18):
+            acc += sample(gray, *apply_h(h, cx + ox, cy + oy))
+    v = (acc / 9 - 128.0) / 128.0
+    known = np.full((m, m), -1)
+    known[:pad, :] = known[-pad:, :] = 0
+    known[:, :pad] = known[:, -pad:] = 0
+    for r in range(n):
+        for c in range(n):
+            if r == 0 or c == 0 or r == n - 1 or c == n - 1:
+                known[r + pad, c + pad] = _frame_value(r, c, n)
+    # 3 x 3 neighbourhood features for every interior position
+    win = np.stack([v[1 + dr:m - 1 + dr, 1 + dc:m - 1 + dc]
+                    for dr in (-1, 0, 1) for dc in (-1, 0, 1)], -1)
+    feats = np.concatenate([win, np.ones(win.shape[:2] + (1,))], -1)
+    k = known[1:-1, 1:-1]
+    x, y = feats[k >= 0], k[k >= 0].astype(float)
+    if len(y) < 40:
+        return None
+    w, *_ = np.linalg.lstsq(x, y, rcond=None)
+    pred = (feats @ w)[pad - 1:pad - 1 + n, pad - 1:pad - 1 + n]
+    return (pred > 0.5).astype(np.uint8), np.clip(np.abs(pred - 0.5) * 2, 0, 1)
+
+
+def _frame_value(r: int, c: int, n: int) -> int:
+    if c == 0 or r == n - 1:
+        return 1
+    if r == 0:
+        return 1 if c % 2 == 0 else 0
+    return 1 if r % 2 == 0 else 0
+
+
 # ------------------------------------------------------------------ driver
 
 
@@ -518,11 +564,17 @@ def locate(gray: np.ndarray, quad: np.ndarray):
 
 def decode_at(gray: np.ndarray, corners: np.ndarray, n: int) -> Decoded | None:
     h = corners_h(corners, n)
-    bits, conf, _ = sample_modules(gray, h, n)
-    modules = bits.tolist()
-    confidence = conf.tolist()
-    reads = [(read_bytes(modules, m), symbol_confidence(confidence, m), m) for m in (False, True)]
-    return decode_bytes(n, reads)
+    readings = [sample_modules(gray, h, n)[:2]]
+    eq = equalized_modules(gray, h, n)
+    if eq is not None:
+        readings.append(eq)
+    for bits, conf in readings:
+        modules, confidence = bits.tolist(), conf.tolist()
+        reads = [(read_bytes(modules, m), symbol_confidence(confidence, m), m) for m in (False, True)]
+        result = decode_bytes(n, reads)
+        if result is not None:
+            return result
+    return None
 
 
 def candidate_quads(gray: np.ndarray, mask: np.ndarray, limit: int = 40):
@@ -533,7 +585,8 @@ def candidate_quads(gray: np.ndarray, mask: np.ndarray, limit: int = 40):
         bw, bh = x1 - x0, y1 - y0
         if max(bw, bh) > 6 * min(bw, bh):
             continue
-        if comp.pixels < 0.12 * bw * bh:
+        # a bare L frame (data modules not touching it) fills only ~5-9% of its box
+        if comp.pixels < 0.03 * bw * bh:
             continue
         hull = component_hull(comp)
         quad = hull_quad(hull)
@@ -548,29 +601,38 @@ def candidate_quads(gray: np.ndarray, mask: np.ndarray, limit: int = 40):
 
 
 def read(image, max_side: int = 1600) -> list[Detection]:
-    """Decode every PASCAL-MDS symbol found in an image."""
-    gray = load_gray(image)
-    scale = 1.0
-    if max(gray.shape) > max_side:
-        from PIL import Image
+    """Decode every PASCAL-MDS symbol found in an image.
 
-        scale = max(gray.shape) / max_side
-        size = (round(gray.shape[1] / scale), round(gray.shape[0] / scale))
-        gray = np.asarray(Image.fromarray(gray).resize(size, Image.BILINEAR), dtype=np.float32)
+    Detection runs on an image pyramid (the working image, then halves while
+    the long side stays >= 320 px): fine screen or print texture can break a
+    large symbol's frame into pieces at full resolution, and a coarser level
+    joins them again.  Symbols already decoded are skipped."""
+    from PIL import Image
+
+    gray = load_gray(image)
+    base = max(1.0, max(gray.shape) / max_side)
     found: list[Detection] = []
-    for binarize in (binarize_adaptive, binarize_otsu):
-        for quad in candidate_quads(gray, binarize(gray)):
-            if any(_inside(quad.mean(0), d.corners / scale) for d in found):
-                continue
-            located = locate(gray, quad)
-            if located is None:
-                continue
-            corners, n, _ = located
-            decoded = decode_at(gray, corners, n)
-            if decoded is not None:
-                found.append(Detection(decoded, corners * scale))
-    # Both binarisations always run: a symbol that one of them outlines badly
-    # may still be found by the other (already-decoded regions are skipped).
+    scale = base
+    while max(gray.shape) / scale >= 320 or scale == base:
+        if scale == 1.0:
+            level = gray
+        else:
+            size = (round(gray.shape[1] / scale), round(gray.shape[0] / scale))
+            level = np.asarray(Image.fromarray(gray).resize(size, Image.BOX), dtype=np.float32)
+        for binarize in (binarize_adaptive, binarize_otsu):
+            for quad in candidate_quads(level, binarize(level)):
+                if any(_inside(quad.mean(0) * scale, d.corners) for d in found):
+                    continue
+                located = locate(level, quad)
+                if located is None:
+                    continue
+                corners, n, _ = located
+                decoded = decode_at(level, corners, n)
+                if decoded is not None:
+                    found.append(Detection(decoded, corners * scale))
+        scale *= 2
+        if scale > base * 4:
+            break
     return found
 
 

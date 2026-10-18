@@ -328,7 +328,21 @@ function readFile(file) {
   stopLive();
   $("status").textContent = "Reading…"; $("result").className = "result";
   const url = URL.createObjectURL(file), im = new Image();
-  im.onload = () => { const ctx = showImage(im, im.naturalWidth, im.naturalHeight); URL.revokeObjectURL(url); setTimeout(() => readCanvas(ctx), 20); };
+  im.onload = () => {
+    const ctx = showImage(im, im.naturalWidth, im.naturalHeight); URL.revokeObjectURL(url);
+    // decode from a copy of up to 2400 px, not from the small preview: phone
+    // photos often hold the code in only a small part of the frame
+    setTimeout(() => {
+      const t = performance.now(), k = Math.min(1, 2400 / Math.max(im.naturalWidth, im.naturalHeight));
+      const full = document.createElement("canvas");
+      full.width = Math.round(im.naturalWidth * k); full.height = Math.round(im.naturalHeight * k);
+      const fctx = full.getContext("2d", { willReadFrequently: true }); fctx.drawImage(im, 0, 0, full.width, full.height);
+      const found = PM.readImageData(fctx.getImageData(0, 0, full.width, full.height), { maxSide: 2400 });
+      const toView = ctx.canvas.width / full.width;
+      found.forEach((f) => outline(ctx, f.corners.map(([x, y]) => [x * toView, y * toView]), "#17b26a"));
+      showResult(found, Math.round(performance.now() - t));
+    }, 20);
+  };
   im.onerror = () => { $("status").textContent = "That file isn't an image this browser can open."; $("result").className = "result bad"; };
   im.src = url;
 }
