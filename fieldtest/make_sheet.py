@@ -12,15 +12,24 @@ from pathlib import Path
 
 import segno
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "research"))
+sys.path.insert(0, str(ROOT / "research" / "v2"))
 from pascal_mds import encode  # noqa: E402
+import dense  # noqa: E402
 
 LINK = "https://www.example.com/products/item?id=12345&ref={tag}"
 CONTACT = ("BEGIN:VCARD\nVERSION:3.0\nN:Doe;Jane\nTEL:+1-555-0100\n"
            "EMAIL:jane.doe@example.com\nNOTE:{tag}\nEND:VCARD")
+NOTES = ("Meeting notes 18 Oct: the new barcode reads at half the printed size of a QR Code in simulation. "
+         "Next: field tests with printed sheets at 0.5, 1, 1.5 and 2 m, normal room light, three phones. "
+         "Contact Jane Doe (jane.doe@example.com) for the test kit; budget PX-2207. Tag {tag}.")
+V2_LEVEL = "B"
 SETS = [
     ("a", "Link, 53 characters", LINK, [220, 150, 105, 75, 55, 40]),
     ("b", "Contact card, 104 characters", CONTACT, [260, 180, 125, 90, 65]),
+    ("c", "Notes, 300 characters", NOTES, [320, 230, 165, 120, 90]),
 ]
 
 
@@ -53,13 +62,18 @@ def main() -> None:
             text = template.format(tag=tag)
             qr = segno.make_qr(text, error="m", boost_error=False)
             qm = [list(r) for r in qr.matrix]
-            pm = encode(text, "M")
-            rows.append(
-                f'<div class="pair"><div class="tag"><b>{tag}</b><span>{w} px wide</span></div>'
-                f'<figure><div class="plate">{svg(qm, 4, w, f"QR Code {tag}")}</div>'
-                f'<figcaption>QR {len(qm)}×{len(qm)}</figcaption></figure>'
-                f'<figure><div class="plate">{svg(pm.modules, 2, w, f"PASCAL-MDS {tag}")}</div>'
-                f'<figcaption>PASCAL {pm.size}×{pm.size}</figcaption></figure></div>')
+            cells = [f'<figure><div class="plate">{svg(qm, 4, w, f"QR Code {tag}")}</div>'
+                     f'<figcaption>QR {len(qm)}×{len(qm)}</figcaption></figure>']
+            try:
+                pm = encode(text, "M")
+                cells.append(f'<figure><div class="plate">{svg(pm.modules, 2, w, f"PASCAL-MDS {tag}")}</div>'
+                             f'<figcaption>Standard {pm.size}×{pm.size}</figcaption></figure>')
+            except ValueError:
+                cells.append('<figure class="na"><figcaption>Standard: too long</figcaption></figure>')
+            v, grid = dense.encode(text, V2_LEVEL)
+            cells.append(f'<figure><div class="plate">{svg(grid.tolist(), dense.QUIET, w, f"PASCAL-MDS Dense {tag}")}</div>'
+                         f'<figcaption>Dense {v.S}×{v.S}</figcaption></figure>')
+            rows.append(f'<div class="pair"><div class="tag"><b>{tag}</b><span>{w} px wide</span></div>{"".join(cells)}</div>')
         sections.append(f'<section><h2>{title}</h2><div class="grid">{"".join(rows)}</div></section>')
     html = TEMPLATE.replace("{{SECTIONS}}", "".join(sections))
     out = Path(__file__).parent / "sheet.html"
@@ -91,16 +105,17 @@ li + li { margin-top: 4px; }
 .tag span { color: var(--muted); font-size: 12px; }
 figure { margin: 0; display: grid; gap: 6px; justify-items: start; }
 figcaption { font: 12px var(--mono); color: var(--muted); }
+figure.na { align-self: center; }
 .plate { background: #fff; line-height: 0; }
 svg { display: block; max-width: 100%; height: auto; }
 </style>
 <main>
   <header style="display:grid;gap:10px">
     <h1>Barcode Distance Test</h1>
-    <p class="note">Each row shows a QR Code and a PASCAL-MDS code of the same text at the same printed width. The tag in the text (a1, a2, …) tells which size was read.</p>
+    <p class="note">Each row shows a QR Code, a PASCAL-MDS Standard code and a PASCAL-MDS Dense code of the same text at the same printed width. The tag in the text (a1, a2, …) tells which size was read.</p>
     <ol>
       <li>Show this page on a computer screen at 100% zoom, brightness high.</li>
-      <li>Photograph it with your phone's normal camera from several distances (for example 30 cm, 60 cm, 1 m, 1.5 m), straight on, then a few at an angle.</li>
+      <li>Photograph each group with your phone's normal camera from several real distances: 0.5 m, 1 m, 1.5 m and 2 m, straight on, then a few at an angle. Normal room light helps.</li>
       <li>Upload the photos in the chat. Both codes in every photo get decoded and compared.</li>
     </ol>
   </header>

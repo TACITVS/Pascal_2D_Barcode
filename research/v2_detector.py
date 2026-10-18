@@ -16,6 +16,7 @@ detectors of multistage.py on the same realistic channel.
 from __future__ import annotations
 
 import argparse
+import math
 from functools import lru_cache
 
 import numpy as np
@@ -31,40 +32,70 @@ NB = [(dr, dc) for dr in range(-RAD, RAD + 1) for dc in range(-RAD, RAD + 1)]
 LAT = RAD + 2.0  # half-width of the response lattice, modules
 
 
+def _quadratic_bspline_quadrature(points: int = 31):
+    t = -1.5 + 3 * (np.arange(points) + 0.5) / points
+    a = np.abs(t)
+    w = np.where(a < 0.5, 0.75 - a * a, np.where(a < 1.5, 0.5 * (1.5 - a) ** 2, 0.0))
+    return t, w / w.sum()
+
+
+_QT, _QW = _quadratic_bspline_quadrature()
+_erf = np.vectorize(math.erf)
+
+
+def profile(pitch: float, blur: float, x: np.ndarray) -> np.ndarray:
+    """1-D darkening at x camera px from the centre of one module: module box
+    (width = pitch) * Gaussian lens blur * pixel box * bilinear triangle.
+    The 2-D footprint is the product of two such profiles (all separable)."""
+    sg = max(blur, 1e-3) * math.sqrt(2)
+    u = np.asarray(x, float)[..., None] - _QT
+    return ((_erf((u + pitch / 2) / sg) - _erf((u - pitch / 2) / sg)) / 2) @ _QW
+
+
 @lru_cache(maxsize=None)
 def response_grid(pitch: float, blur: float) -> np.ndarray:
-    """R on the half-module lattice: R[(dy+4.5)*2, (dx+4.5)*2] = darkening
-    (0..1) at displacement (dx, dy) modules from a single dark module's
-    centre, averaged over sub-pixel phases."""
+    """R on the half-module lattice: R[(dy+LAT)*2, (dx+LAT)*2] = darkening
+    (0..1) at displacement (dx, dy) modules from a single module's centre.
+    Closed form; agrees with response_grid_rendered within 0.006."""
+    lattice = np.arange(-LAT, LAT + 0.01, 0.5)
+    r1 = profile(pitch, blur, lattice * pitch)
+    return np.outer(r1, r1)
+
+
+def response_grid_rendered(pitch: float, blur: float) -> np.ndarray:
+    """Reference: the same response by rendering with capacity.render."""
     lattice = np.arange(-LAT, LAT + 0.01, 0.5)
     acc = np.zeros((len(lattice), len(lattice)))
     ch = Channel(pitch, blur, 0.0, 0, 2)
     rng = np.random.default_rng(0)
-    n = 13
+    n = 2 * int(LAT) + 3
     for _ in range(16):
         mods = np.zeros((n, n), int)
         mods[n // 2, n // 2] = 1
         img, cx, cy = render(mods, ch, rng)
-        x0, y0 = cx[n // 2], cy[n // 2]
         gx, gy = np.meshgrid(lattice, lattice)
-        acc += (LIGHT - bilinear(img, x0 + gx * pitch, y0 + gy * pitch)) / D
+        acc += (LIGHT - bilinear(img, cx[n // 2] + gx * pitch, cy[n // 2] + gy * pitch)) / D
     return acc / 16
 
 
+_IDX = None
+
+
+@lru_cache(maxsize=4096)
 def footprints(pitch: float, blur: float) -> np.ndarray:
     """F[n, j]: darkening of sample j (7x7 offsets around module i) caused
     by neighbour n of module i."""
-    R = response_grid(pitch, round(blur, 2))
-    F = np.zeros((len(NB), len(OFFS) ** 2))
-    for ni, (dr, dc) in enumerate(NB):
-        j = 0
-        for oy in OFFS:
-            for ox in OFFS:
-                dx, dy = ox - dc, oy - dr
-                if abs(dx) <= LAT and abs(dy) <= LAT:
-                    F[ni, j] = R[int(round((dy + LAT) * 2)), int(round((dx + LAT) * 2))]
-                j += 1
-    return F
+    global _IDX
+    if _IDX is None:
+        oy, ox = np.meshgrid(OFFS, OFFS, indexing="ij")
+        ox, oy = ox.ravel(), oy.ravel()
+        dr = np.array([d[0] for d in NB])[:, None]
+        dc = np.array([d[1] for d in NB])[:, None]
+        _IDX = (np.rint((ox[None, :] - dc + LAT) * 2).astype(int), np.rint((oy[None, :] - dr + LAT) * 2).astype(int))
+    lattice = np.arange(-LAT, LAT + 0.01, 0.5)
+    r1 = profile(pitch, blur, lattice * pitch)
+    ix, iy = _IDX
+    return r1[ix] * r1[iy]
 
 
 def samples(img, cx, cy, rows, cols, ch, rng):

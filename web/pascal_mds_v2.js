@@ -137,6 +137,14 @@
     return null;
   }
 
+  function unsatisfiedFraction(code, llr) {
+    const s = new Uint8Array(code.m), hard = (i) => (llr[i] < 0 ? 1 : 0);
+    for (let e = 0; e < code.rows.length; e++) s[code.rows[e]] ^= hard(code.cols[e]);
+    let bad = 0;
+    for (let j = 0; j < code.m; j++) { const v = s[j] ^ hard(code.k + j) ^ (j ? hard(code.k + j - 1) : 0); bad += v; }
+    return bad / code.m;
+  }
+
   // ------------------------------------------------------------ outer code
   function choosePad(parity0, unit) {
     let cur = parity0.slice();
@@ -299,13 +307,22 @@
       if (!best || err < best.err) best = { err, blur: Math.round(b * 100) / 100, kappa };
     }
     ph.kappa = Math.max(best.kappa, 0.05);
+    // model mismatch beyond the unknown neighbours' variance counts as noise (see reader2.py)
+    let r2 = 0, uv = 0, cnt = 0;
+    { const fp = footprints(ph.pitch, best.blur);
+      for (const [, , d, x] of rows) for (let j = 0; j < 49; j++) {
+        let m = fp.far[j], u = 0;
+        for (let i = 0; i < NB.length; i++) { if (!x[i]) continue; const f = fp.F[i][j]; m += x[i] * f; if (x[i] === 0.5) u += f * f; }
+        r2 += ((D / ph.kappa) * (d[j] - ph.kappa * m)) ** 2; uv += (D * D / 4) * u; cnt++;
+      } }
+    const mismatch2 = Math.max(0, (r2 - uv) / cnt);
     const vals = [];
     for (let r = -QUIET; r < S + QUIET; r++) for (let c = -QUIET; c < S + QUIET; c++) {
       const d = Math.min(r, c, S - 1 - r, S - 1 - c); if (d !== -3 && d !== -4) continue;
       vals.push(LIGHT - (D * ph.darkening(r, c)[24]) / ph.kappa);
     }
     const mean = vals.reduce((a, b) => a + b, 0) / vals.length, sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
-    return { blur: best.blur, noise: Math.max(3, sd) };
+    return { blur: best.blur, noise: Math.max(3, Math.sqrt(sd * sd + mismatch2)) };
   }
   function decodeSymbol(sampler, corners, S, mirrored, level) {
     const ph = new Photo(sampler, corners, S, mirrored), est = estimate(ph), fp = footprints(ph.pitch, est.blur);
@@ -331,6 +348,8 @@
         llr[i] = sc[i] ? -L : L;
       }
       for (let i = 0; i < llr.length; i++) llr[i] = Math.max(-30, Math.min(30, llr[i]));
+      // wrong level/orientation/format: raw decisions violate ~half the checks (see reader2.py)
+      if (k === 0 && unsatisfiedFraction(code, llr) > 0.42) return null;
       const bits = ldpcDecode(code, llr); if (!bits) return null;
       info.set(bits.subarray(0, code.k), pos); pos += code.k;
       for (let i = 0; i < rows.length; i++) state[(rows[i] + QUIET) * W + cols[i] + QUIET] = bits[i] ^ sc[i];

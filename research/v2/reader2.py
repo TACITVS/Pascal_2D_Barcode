@@ -105,29 +105,61 @@ def estimate(ph: Photo):
     kg = np.pad(known, det.RAD, constant_values=0)
     x = np.stack([kg[fr + Q + det.RAD + dr, fc + Q + det.RAD + dc] for dr, dc in NB], 1).astype(float)
     x[x < 0] = 0.5
-    best = None
-    for b in np.arange(0.3, 3.51, 0.05):
-        F = det.footprints(round(ph.pitch, 2), float(round(b, 2)))
+    pitch = round(ph.pitch, 2)
+
+    def fit(b):
+        F = det.footprints(pitch, b)
         m = x @ F + 0.5 * (1 - F.sum(0))
         kappa = float((d * m).sum() / max((m * m).sum(), 1e-9))
-        err = float(((d - kappa * m) ** 2).mean())
-        if best is None or err < best[0]:
-            best = (err, float(round(b, 2)), kappa)
+        return float(((d - kappa * m) ** 2).mean()), b, kappa
+
+    # coarse grid, then refine around the best point
+    best = min(fit(round(b, 2)) for b in np.arange(0.3, 3.51, 0.25))
+    best = min(fit(round(b, 2)) for b in np.arange(max(0.3, best[1] - 0.2), best[1] + 0.21, 0.05))
     _, blur, kappa = best
     ph.kappa = max(kappa, 0.05)
+    # Model mismatch: frame residual beyond what the unknown data neighbours
+    # explain.  Crisp, pixel-snapped renderings (screens, screenshots) or
+    # sharpening break the footprint model; counting the misfit as noise
+    # keeps the soft information honest instead of confidently wrong.
+    F = det.footprints(pitch, blur)
+    m = x @ F + 0.5 * (1 - F.sum(0))
+    resid = (D / ph.kappa) * (d - ph.kappa * m)
+    unknown_var = (D * D / 4) * ((x == 0.5).astype(float) @ (F * F))
+    mismatch2 = max(0.0, float((resid ** 2).mean() - unknown_var.mean()))
     ring = [(r, c) for r in range(-Q, S + Q) for c in range(-Q, S + Q)
             if min(r, c, S - 1 - r, S - 1 - c) in (-3, -4)]
     rr = np.array([p[0] for p in ring])
     cc = np.array([p[1] for p in ring])
     vals = ph.normalised(rr, cc)[:, len(OFFS) ** 2 // 2]
-    return blur, float(max(3.0, np.std(vals)))
+    return blur, float(max(3.0, np.sqrt(np.var(vals) + mismatch2)))
 
 
-def decode_symbol(gray, corners, S, mirrored, level, blur=None, noise=None):
+# Fraction of parity checks violated by the raw hard decisions.  A wrong
+# hypothesis (level, mirror, or a v1 symbol) gives ~0.5; a decodable photo
+# clearly less (measured: right 0.00-0.33 down to the decode limit, wrong
+# 0.46-0.55), so hypotheses above 0.42 are rejected without decoding.
+REJECT_ABOVE = 0.42
+
+
+def unsatisfied_fraction(code, llr) -> float:
+    hard = (llr < 0).astype(np.uint8)
+    s = np.zeros(code.m, np.uint8)
+    np.add.at(s, code.h1_rows, hard[code.h1_cols])
+    s = (s + hard[code.k:]) & 1
+    s[1:] ^= hard[code.k:-1]
+    return float(s.mean())
+
+
+def decode_symbol(gray, corners, S, mirrored, level, blur=None, noise=None, kappa=None):
+    """Decode one hypothesis.  blur/noise/kappa: pass the estimates from a
+    previous hypothesis on the same symbol (they do not depend on level or
+    orientation) to skip re-estimating them."""
     ph = Photo(gray, corners, S, mirrored)
-    est_blur, est_noise = estimate(ph)
-    blur = est_blur if blur is None else blur
-    noise = est_noise if noise is None else noise
+    if blur is None:
+        blur, noise = estimate(ph)
+    else:
+        ph.kappa = kappa
     F = det.footprints(round(ph.pitch, 2), round(blur, 2))
     v = version(S, level)
     Q, R = QUIET, det.RAD
@@ -156,6 +188,8 @@ def decode_symbol(gray, corners, S, mirrored, level, blur=None, noise=None):
             llr[sel] = det.stage_llr(y[sel], xk, F, flt)
         sc = scramble(S, level, k, len(rr))
         llr = np.where(sc == 1, -llr, llr)
+        if k == 0 and unsatisfied_fraction(code, llr) > REJECT_ABOVE:
+            return None  # wrong level, orientation or format: checks look random
         bits, ok = Decoder(code).decode(np.clip(llr, -30, 30), iters=80)
         if not ok:
             return None
@@ -177,7 +211,7 @@ def read(image, max_side: int = 2400, levels: str = "ABC") -> list[Result]:
     found: list[Result] = []
     for binarize in (binarize_adaptive, binarize_otsu):
         for quad in candidate_quads(gray, binarize(gray)):
-            if any(_inside(quad.mean(0), f.corners) for f in found):
+            if any(_inside(quad.mean(0), f.corners / scale) for f in found):
                 continue
             loc = locate(gray, quad)
             if loc is None:
@@ -187,9 +221,11 @@ def read(image, max_side: int = 2400, levels: str = "ABC") -> list[Result]:
             if S not in dense.SIZES:
                 continue
             res = None
+            ph = Photo(gray, corners, S, False)
+            blur, noise = estimate(ph)
             for mirrored in (False, True):
                 for level in levels:
-                    res = decode_symbol(gray, corners, S, mirrored, level)
+                    res = decode_symbol(gray, corners, S, mirrored, level, blur, noise, ph.kappa)
                     if res:
                         break
                 if res:
