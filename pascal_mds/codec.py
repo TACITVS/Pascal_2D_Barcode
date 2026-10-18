@@ -21,14 +21,16 @@ MODE_BYTES = 0
 MODE_TEXT = 1
 
 # Compact text mode: 6 bits per character for the characters URLs, Wi-Fi
-# strings and short messages mostly use.  Code 63 escapes one raw byte.
+# strings, contacts and short messages mostly use.  Letters are lower case
+# unless CAPS (toggle a caps lock) or SHIFT (flip the next letter) says
+# otherwise; ESC is followed by one raw byte.
 TEXT_TOKENS: tuple[bytes, ...] = tuple(
     [bytes([c]) for c in b"abcdefghijklmnopqrstuvwxyz0123456789"]
-    + [bytes([c]) for c in b" ./:-_?=&%#@+~!*,;$'()\n"]
-    + [b"https://", b"http://", b"www.", b".com"]
+    + [bytes([c]) for c in b" ./:-_?=&%#@+~!*,;'()\n"]
+    + [b"https://", b"www.", b".com"]
 )
-TEXT_ESCAPE = 63
-assert len(TEXT_TOKENS) == 63
+TEXT_CAPS, TEXT_SHIFT, TEXT_ESCAPE = 61, 62, 63
+assert len(TEXT_TOKENS) == 61
 _LONG_TOKENS = sorted((t for t in TEXT_TOKENS if len(t) > 1), key=len, reverse=True)
 _SINGLE = {t[0]: i for i, t in enumerate(TEXT_TOKENS) if len(t) == 1}
 _TOKEN_INDEX = {t: i for i, t in enumerate(TEXT_TOKENS)}
@@ -64,12 +66,17 @@ class Decoded:
 
 # --------------------------------------------------------------------- modes
 
+def _is_letter(b: int) -> bool:
+    return 65 <= b <= 90 or 97 <= b <= 122
+
+
 def pack_text(data: bytes) -> bytes:
     bits: list[int] = []
 
     def put(value: int, width: int) -> None:
         bits.extend((value >> (width - 1 - i)) & 1 for i in range(width))
 
+    caps = False
     i = 0
     while i < len(data):
         for token in _LONG_TOKENS:
@@ -79,7 +86,20 @@ def pack_text(data: bytes) -> bytes:
                 break
         else:
             byte = data[i]
-            if byte in _SINGLE:
+            if _is_letter(byte):
+                upper = byte <= 90
+                if upper != caps:
+                    run = 0
+                    while (i + run < len(data) and _is_letter(data[i + run])
+                           and (data[i + run] <= 90) == upper):
+                        run += 1
+                    if run >= 2:
+                        put(TEXT_CAPS, 6)
+                        caps = upper
+                    else:
+                        put(TEXT_SHIFT, 6)
+                put(_SINGLE[byte | 0x20], 6)
+            elif byte in _SINGLE:
                 put(_SINGLE[byte], 6)
             else:
                 put(TEXT_ESCAPE, 6)
@@ -96,6 +116,7 @@ def unpack_text(packed: bytes) -> bytes:
     bits = [(b >> (7 - i)) & 1 for b in packed for i in range(8)]
     out = bytearray()
     pos = 0
+    caps = shift = False
 
     def take(width: int) -> int:
         nonlocal pos
@@ -111,8 +132,17 @@ def unpack_text(packed: bytes) -> bytes:
             if len(bits) - pos < 8:
                 break
             out.append(take(8))
+        elif code == TEXT_CAPS:
+            caps = not caps
+        elif code == TEXT_SHIFT:
+            shift = True
+            continue
         else:
-            out += TEXT_TOKENS[code]
+            token = TEXT_TOKENS[code]
+            if code < 26 and caps != shift:
+                token = token.upper()
+            out += token
+        shift = False
     return bytes(out)
 
 

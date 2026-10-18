@@ -1,0 +1,403 @@
+<title>PASCAL-MDS Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Make and read PASCAL-MDS barcodes: a compact 2D code built on Pascal's triangle over GF(257).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a two-panel workbench (make | read) that stacks on phones; a measured comparison strip below. */
+:root {
+  --paper: #f2f4f8;
+  --surface: #ffffff;
+  --ink: #12151c;
+  --muted: #586174;
+  --line: #d6dce6;
+  --accent: #2f44cf;
+  --accent-soft: #e4e8fb;
+  --on-accent: #ffffff;
+  --ok: #17784f;
+  --ok-soft: #dff3e9;
+  --bad: #a3361f;
+  --bad-soft: #f8e4de;
+  --plate: #ffffff;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1117; --surface: #161a23; --ink: #e7eaf1; --muted: #98a1b3; --line: #2a303d;
+    --accent: #8e9cff; --accent-soft: #232a4a; --on-accent: #0e1117;
+    --ok: #5cc996; --ok-soft: #15301f; --bad: #f08f78; --bad-soft: #3a1d17; --plate: #ffffff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0e1117; --surface: #161a23; --ink: #e7eaf1; --muted: #98a1b3; --line: #2a303d;
+  --accent: #8e9cff; --accent-soft: #232a4a; --on-accent: #0e1117;
+  --ok: #5cc996; --ok-soft: #15301f; --bad: #f08f78; --bad-soft: #3a1d17; --plate: #ffffff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+h1 small { font-weight: 500; color: var(--muted); font-size: 0.55em; letter-spacing: 0; margin-left: 6px; }
+.tagline { color: var(--muted); margin: 0; max-width: 62ch; }
+h2 { font-family: var(--font-display); font-weight: 700; font-size: 20px; margin: 0; }
+.eyebrow { font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+@media (max-width: 820px) { .panels { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+label { font-weight: 700; font-size: 13px; }
+textarea {
+  width: 100%; min-height: 92px; resize: vertical; font: 14px/1.45 var(--font-data); color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea:focus-visible, button:focus-visible, .seg input:focus-visible + span, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 12px var(--font-body); border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { font-weight: 400; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 6px 12px; font: 700 13px var(--font-data); color: var(--muted); border-right: 1px solid var(--line); }
+.seg label:last-child span { border-right: 0; }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
+.hint { color: var(--muted); font-size: 13px; }
+.symbol-stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+@media (max-width: 460px) { .symbol-stage { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
+.plate { background: var(--plate); border-radius: 6px; padding: 6px; line-height: 0; border: 1px solid var(--line); }
+#symbol { width: 196px; height: 196px; image-rendering: pixelated; max-width: 100%; }
+dl.stats { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; font-size: 13px; }
+dl.stats dt { color: var(--muted); }
+dl.stats dd { margin: 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.compare { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); font-size: 13px; }
+.compare b { font-family: var(--font-data); }
+.minis { display: flex; gap: 8px; align-items: flex-end; flex: none; }
+.mini { background: var(--accent); opacity: 0.85; border-radius: 2px; }
+.mini.qr { background: var(--muted); opacity: 0.45; }
+button.btn { font: 700 14px var(--font-body); border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); }
+button.btn.ghost { background: transparent; color: var(--accent); }
+button.btn:disabled { opacity: 0.5; cursor: default; }
+.drop { border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 12px; justify-items: start; background: var(--paper); }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.viewer { position: relative; width: 100%; background: var(--paper); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+#photo { display: block; width: 100%; height: auto; }
+#video { display: block; width: 100%; height: auto; }
+.result { border-radius: 8px; padding: 12px 14px; display: grid; gap: 8px; border: 1px solid var(--line); min-width: 0; }
+.result.ok { background: var(--ok-soft); border-color: transparent; }
+.result.bad { background: var(--bad-soft); border-color: transparent; }
+.result .status { font-weight: 700; font-size: 13px; }
+.result.ok .status { color: var(--ok); }
+.result.bad .status { color: var(--bad); }
+.decoded { font: 14px/1.45 var(--font-data); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; user-select: all; }
+.meta { font-family: var(--font-data); font-size: 12px; color: var(--muted); }
+.bench { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 12px; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+td.num { font-family: var(--font-data); text-align: right; }
+td.win { color: var(--ok); font-weight: 700; }
+.foot { color: var(--muted); font-size: 13px; max-width: 75ch; margin: 0; }
+@media (prefers-reduced-motion: no-preference) { .result { transition: background 0.2s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>PASCAL-MDS <small>Studio</small></h1>
+    <p class="tagline">A 2D barcode whose error correction is Pascal's triangle over the prime field GF(257). Same text, a smaller symbol than QR, with stronger damage recovery.</p>
+  </header>
+
+  <div class="panels">
+    <section class="panel" aria-labelledby="make-h">
+      <div class="panel-head"><h2 id="make-h">Make a code</h2><span class="eyebrow">Encoder</span></div>
+      <div style="display:grid;gap:6px">
+        <label for="text">Text, link or Wi-Fi string</label>
+        <textarea id="text" spellcheck="false">https://www.example.com/products/item?id=12345&amp;ref=qr</textarea>
+        <div class="chips" aria-label="Examples">
+          <button class="chip" data-ex="https://www.example.com/products/item?id=12345&amp;ref=qr">Link</button>
+          <button class="chip" data-ex="WIFI:S:HomeNetwork;T:WPA;P:correct-horse-battery;;">Wi-Fi</button>
+          <button class="chip" data-ex="BEGIN:VCARD&#10;VERSION:3.0&#10;N:Doe;Jane&#10;TEL:+1-555-0100&#10;EMAIL:jane.doe@example.com&#10;END:VCARD">Contact</button>
+          <button class="chip" data-ex="Table 12 · order #4471">Short note</button>
+        </div>
+      </div>
+      <div class="row">
+        <span class="hint" id="level-label">Damage tolerance</span>
+        <div class="seg" role="radiogroup" aria-labelledby="level-label">
+          <label><input type="radio" name="level" id="lv-L" value="L"><span>L 7%</span></label>
+          <label><input type="radio" name="level" id="lv-M" value="M" checked><span>M 15%</span></label>
+          <label><input type="radio" name="level" id="lv-Q" value="Q"><span>Q 25%</span></label>
+          <label><input type="radio" name="level" id="lv-H" value="H"><span>H 30%</span></label>
+        </div>
+      </div>
+      <div class="symbol-stage">
+        <div class="plate"><canvas id="symbol" width="196" height="196" aria-label="Generated PASCAL-MDS symbol"></canvas></div>
+        <dl class="stats" id="stats"></dl>
+      </div>
+      <div class="compare" id="compare"></div>
+      <div class="row">
+        <button class="btn" id="save-png">Save PNG</button>
+        <button class="btn ghost" id="save-svg">Save SVG</button>
+        <span class="hint" id="save-msg" role="status"></span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="read-h">
+      <div class="panel-head"><h2 id="read-h">Read a code</h2><span class="eyebrow">Scanner</span></div>
+      <div class="drop" id="drop">
+        <div class="row">
+          <button class="btn" id="take">Take photo</button>
+          <button class="btn ghost" id="choose">Choose image</button>
+          <button class="btn ghost" id="live">Live camera</button>
+          <button class="btn ghost" id="test">Test with a tilted photo</button>
+        </div>
+        <span class="hint">On a phone, Take photo opens the camera. You can also drop or paste an image here.</span>
+        <input type="file" id="file-camera" accept="image/*" capture="environment" hidden>
+        <input type="file" id="file-any" accept="image/*" hidden>
+      </div>
+      <div class="viewer" id="viewer">
+        <canvas id="photo" width="640" height="420" aria-label="Image being read"></canvas>
+        <video id="video" playsinline muted hidden></video>
+      </div>
+      <div class="result" id="result" aria-live="polite">
+        <span class="status" id="status">Reading the example…</span>
+        <pre class="decoded" id="decoded"></pre>
+        <span class="meta" id="meta"></span>
+        <div class="row" id="result-actions" hidden>
+          <button class="btn ghost" id="copy">Copy text</button>
+          <a class="btn ghost" id="open-link" href="#" target="_blank" rel="noopener" hidden style="text-decoration:none;font:700 14px var(--font-body);padding:9px 14px;border:1px solid var(--accent);border-radius:8px;color:var(--accent)">Open link</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="bench" aria-labelledby="bench-h">
+    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 30 per point</span></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Payload</th><th>QR size</th><th>PASCAL size</th><th>Area incl. quiet zone</th><th>Smallest readable width*</th><th>Read with 6% blotted</th></tr></thead>
+        <tbody>
+          <tr><td>Short link, 24 B</td><td class="num">25×25</td><td class="num">17×17</td><td class="num win">−60%</td><td class="num">QR 50 px · <b>40 px</b></td><td class="num">QR 33% · <b>83%</b></td></tr>
+          <tr><td>Link, 53 B</td><td class="num">33×33</td><td class="num">23×23</td><td class="num win">−57%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 40% · <b>90%</b></td></tr>
+          <tr><td>Wi-Fi, 52 B</td><td class="num">33×33</td><td class="num">25×25</td><td class="num win">−50%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 30% · <b>77%</b></td></tr>
+          <tr><td>Contact card, 118 B</td><td class="num">45×45</td><td class="num">35×35</td><td class="num win">−46%</td><td class="num">QR 110 px · <b>75 px</b></td><td class="num">QR 50% · <b>97%</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">*Symbol width in camera pixels at which at least 90% of photos decode; both codes printed at the same width, level M. QR read by zxing-cpp, the engine behind many phone scanners. These are simulations (rotation, perspective, blur, noise, JPEG, lighting), not field tests with real phones. Data Matrix, an existing ISO code, needed 7–13% more area than PASCAL-MDS on these payloads. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
+  </section>
+</div>
+
+<script src="pascal_mds.js"></script>
+<script>
+const PM = window.PascalMDS;
+const QR_CAP = {"byte":{"l":[17,32,53,78,106,134,154,192,230,271,321,367,425,458,520,586,644,718,792,858,929,1003,1091,1171,1273,1367,1465,1528,1628,1732,1840,1952,2068,2188,2303,2431,2563,2699,2809,2953],"m":[14,26,42,62,84,106,122,152,180,213,251,287,331,362,412,450,504,560,624,666,711,779,857,911,997,1059,1125,1190,1264,1370,1452,1538,1628,1722,1809,1911,1989,2099,2213,2331],"q":[11,20,32,46,60,74,86,108,130,151,177,203,241,258,292,322,364,394,442,482,509,565,611,661,715,751,805,868,908,982,1030,1112,1168,1228,1283,1351,1423,1499,1579,1663],"h":[7,14,24,34,44,58,64,84,98,119,137,155,177,194,220,250,280,310,338,382,403,439,461,511,535,593,625,658,698,742,790,842,898,958,983,1051,1093,1139,1219,1273]},"alphanumeric":{"l":[25,47,77,114,154,195,224,279,335,395,468,535,619,667,758,854,938,1046,1153,1249,1352,1460,1588,1704,1853,1990,2132,2223,2369,2520,2677,2840,3009,3183,3351,3537,3729,3927,4087,4296],"m":[20,38,61,90,122,154,178,221,262,311,366,419,483,528,600,656,734,816,909,970,1035,1134,1248,1326,1451,1542,1637,1732,1839,1994,2113,2238,2369,2506,2632,2780,2894,3054,3220,3391],"q":[16,29,47,67,87,108,125,157,189,221,259,296,352,376,426,470,531,574,644,702,742,823,890,963,1041,1094,1172,1263,1322,1429,1499,1618,1700,1787,1867,1966,2071,2181,2298,2420],"h":[10,20,35,50,64,84,93,122,143,174,200,227,259,283,321,365,408,452,493,557,587,640,672,744,779,864,910,958,1016,1080,1150,1226,1307,1394,1431,1530,1591,1658,1774,1852]},"numeric":{"l":[41,77,127,187,255,322,370,461,552,652,772,883,1022,1101,1250,1408,1548,1725,1903,2061,2232,2409,2620,2812,3057,3283,3517,3669,3909,4158,4417,4686,4965,5253,5529,5836,6153,6479,6743,7089],"m":[34,63,101,149,202,255,293,365,432,513,604,691,796,871,991,1082,1212,1346,1500,1600,1708,1872,2059,2188,2395,2544,2701,2857,3035,3289,3486,3693,3909,4134,4343,4588,4775,5039,5313,5596],"q":[27,48,77,111,144,178,207,259,312,364,427,489,580,621,703,775,876,948,1063,1159,1224,1358,1468,1588,1718,1804,1933,2085,2181,2358,2473,2670,2805,2949,3081,3244,3417,3599,3791,3993],"h":[17,34,58,82,106,139,154,202,235,288,331,374,427,468,530,602,674,746,813,919,969,1056,1108,1228,1286,1425,1501,1581,1677,1782,1897,2022,2157,2301,2361,2524,2625,2735,2927,3057]}};
+const $ = (id) => document.getElementById(id);
+const enc = new TextEncoder();
+let current = null; // {sym, text}
+
+// ---- QR comparison: smallest QR version in its best single mode for this text
+function qrSide(text, level) {
+  const l = level.toLowerCase();
+  const mode = /^[0-9]*$/.test(text) ? "numeric" : /^[0-9A-Z $%*+\-./:]*$/.test(text) ? "alphanumeric" : "byte";
+  const len = mode === "byte" ? enc.encode(text).length : text.length;
+  const v = QR_CAP[mode][l].findIndex((c) => c >= len);
+  return v < 0 ? null : 17 + 4 * (v + 1);
+}
+
+function drawSymbol(canvas, sym, quiet = 2) {
+  const n = sym.modules.length, total = n + 2 * quiet;
+  const px = Math.floor(canvas.width / total) || 1, off = Math.floor((canvas.width - px * total) / 2);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#000";
+  sym.modules.forEach((row, r) => row.forEach((v, c) => { if (v) ctx.fillRect(off + (c + quiet) * px, off + (r + quiet) * px, px, px); }));
+}
+
+function level() { return document.querySelector("input[name=level]:checked").value; }
+
+function makeCode() {
+  const text = $("text").value;
+  const stats = $("stats"), cmp = $("compare");
+  try {
+    const sym = PM.encode(text, level());
+    current = { sym, text };
+    drawSymbol($("symbol"), sym);
+    const v = sym.version, bytes = enc.encode(text).length;
+    stats.innerHTML = "";
+    const add = (k, val) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = val; stats.append(dt, dd); };
+    add("Symbol", `${v.n} × ${v.n} modules`);
+    add("Text", `${bytes} bytes`);
+    add("Code", `[${v.N}, ${v.K}] over GF(257)`);
+    add("Repairs", `${v.t} damaged bytes, or ${PM.maxErasures(v)} unreadable ones`);
+    add("Room left", `${v.capacity} payload bytes at this size`);
+    const q = qrSide(text, level());
+    cmp.innerHTML = "";
+    const minis = document.createElement("div"); minis.className = "minis"; minis.setAttribute("aria-hidden", "true");
+    const scale = 40 / Math.max(q || v.n, v.n);
+    for (const [side, cls] of [[v.n + 4, "mini"], [q ? q + 8 : 0, "mini qr"]]) {
+      if (!side) continue; const d = document.createElement("div"); d.className = cls; d.style.width = d.style.height = (side * scale).toFixed(1) + "px"; minis.append(d);
+    }
+    const p = document.createElement("div");
+    if (q) {
+      const saved = Math.round(100 * (1 - ((v.n + 4) ** 2) / ((q + 8) ** 2)));
+      p.innerHTML = `QR Code needs <b>${q} × ${q}</b> for this text at level ${level()}. With required margins this code uses <b>${saved}% less area</b>.`;
+    } else p.textContent = "This text is beyond QR's largest version at this level.";
+    cmp.append(minis, p);
+    $("save-png").disabled = $("save-svg").disabled = false;
+  } catch (e) {
+    current = null;
+    const ctx = $("symbol").getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 196, 196);
+    stats.innerHTML = ""; cmp.textContent = `Too long for one code at level ${level()}: ${e.message}. Try level L or shorten the text.`;
+    $("save-png").disabled = $("save-svg").disabled = true;
+  }
+}
+
+// ---- saving: the artifact's downloads capability, or a plain link when hosted standalone
+let downloads = null;
+const inViewer = !!(window.claude && window.claude.use);
+if (inViewer) window.claude.use("downloads").then((d) => { downloads = d; if (!d) { $("save-png").hidden = $("save-svg").hidden = true; } });
+async function save(filename, data, mime) {
+  const msg = $("save-msg");
+  if (downloads) {
+    try { await downloads.save({ filename, data }); msg.textContent = `Saved ${filename}`; }
+    catch (e) { msg.textContent = e && e.code === "declined" ? "Save cancelled" : "Saving isn't available here"; }
+    return;
+  }
+  if (inViewer) { msg.textContent = "Saving isn't available here"; return; }
+  const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000); msg.textContent = `Saved ${filename}`;
+}
+$("save-png").onclick = () => {
+  if (!current) return;
+  const c = document.createElement("canvas"); const n = current.sym.modules.length; c.width = c.height = (n + 4) * 20;
+  drawSymbol(c, current.sym); c.toBlob((b) => save("pascal-mds.png", b, "image/png"), "image/png");
+};
+$("save-svg").onclick = () => { if (current) save("pascal-mds.svg", PM.toSVG(current.sym, 20), "image/svg+xml"); };
+
+// ---- reading
+function showImage(source, w, h) {
+  const c = $("photo"), maxW = 900, s = Math.min(1, maxW / w);
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  const ctx = c.getContext("2d"); ctx.drawImage(source, 0, 0, c.width, c.height);
+  return ctx;
+}
+function outline(ctx, corners, color) {
+  ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, ctx.canvas.width / 220);
+  ctx.beginPath(); corners.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.stroke();
+  ctx.fillStyle = color; const [x, y] = corners[3]; ctx.beginPath(); ctx.arc(x, y, ctx.lineWidth * 2.2, 0, 7); ctx.fill();
+}
+function showResult(found, ms) {
+  const box = $("result");
+  if (!found.length) {
+    box.className = "result bad"; $("status").textContent = "No code found";
+    $("decoded").textContent = ""; $("meta").textContent = "Fill more of the frame with the code, keep it in focus and leave a light margin around it.";
+    $("result-actions").hidden = true; return;
+  }
+  const d = found[0], v = d.version;
+  box.className = "result ok";
+  $("status").textContent = found.length > 1 ? `Read ${found.length} codes` : "Read";
+  $("decoded").textContent = found.map((f) => f.text).join("\n\n");
+  $("meta").textContent = `${v.n}×${v.n} · level ${v.level} · repaired ${d.errors} byte${d.errors === 1 ? "" : "s"}` +
+    (d.erasures ? ` + ${d.erasures} unreadable` : "") + (d.mirrored ? " · mirrored" : "") + (ms != null ? ` · ${ms} ms` : "");
+  $("result-actions").hidden = false;
+  const link = $("open-link"); const isUrl = /^https?:\/\/\S+$/i.test(d.text.trim());
+  link.hidden = !isUrl; if (isUrl) link.href = d.text.trim();
+}
+function readCanvas(ctx) {
+  const t = performance.now();
+  const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+  const found = PM.readImageData(img);
+  found.forEach((f) => outline(ctx, f.corners, "#17b26a"));
+  showResult(found, Math.round(performance.now() - t));
+}
+function readFile(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  stopLive();
+  $("status").textContent = "Reading…"; $("result").className = "result";
+  const url = URL.createObjectURL(file), im = new Image();
+  im.onload = () => { const ctx = showImage(im, im.naturalWidth, im.naturalHeight); URL.revokeObjectURL(url); setTimeout(() => readCanvas(ctx), 20); };
+  im.onerror = () => { $("status").textContent = "That file isn't an image this browser can open."; $("result").className = "result bad"; };
+  im.src = url;
+}
+$("take").onclick = () => $("file-camera").click();
+$("choose").onclick = () => $("file-any").click();
+$("file-camera").onchange = (e) => readFile(e.target.files[0]);
+$("file-any").onchange = (e) => readFile(e.target.files[0]);
+const drop = $("drop");
+drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
+drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); readFile(e.dataTransfer.files[0]); });
+document.addEventListener("paste", (e) => { const f = [...(e.clipboardData?.files || [])].find((x) => x.type.startsWith("image/")); if (f) readFile(f); });
+
+// Simulated photo of the current code: rotated, sheared, blurred, noisy, unevenly lit.
+function testScan() {
+  if (!current) return;
+  stopLive();
+  const n = current.sym.modules.length, src = document.createElement("canvas");
+  src.width = src.height = (n + 4) * 12; drawSymbol(src, current.sym);
+  const c = $("photo"); c.width = 640; c.height = 420; const ctx = c.getContext("2d");
+  const g = ctx.createLinearGradient(0, 0, 640, 420); g.addColorStop(0, "#d9d4c8"); g.addColorStop(1, "#8f8a80");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 640, 420);
+  ctx.fillStyle = "#3b3a36"; ctx.fillRect(40, 300, 120, 18); ctx.fillRect(500, 60, 90, 40);
+  const ang = (Math.random() * 50 - 25) * Math.PI / 180, sh = Math.random() * 0.3 - 0.15, size = 170 + Math.random() * 60;
+  ctx.save(); ctx.translate(320, 210); ctx.rotate(ang); ctx.transform(1, sh, -sh * 0.5, 1, 0, 0);
+  if ("filter" in ctx) ctx.filter = `blur(${(0.6 + Math.random()).toFixed(2)}px)`;
+  ctx.drawImage(src, -size / 2, -size / 2, size, size); ctx.restore();
+  const im = ctx.getImageData(0, 0, 640, 420), d = im.data;
+  for (let i = 0; i < d.length; i += 4) { const x = (i / 4) % 640, k = 0.8 + 0.2 * x / 640, nz = (Math.random() - 0.5) * 22;
+    for (let j = 0; j < 3; j++) d[i + j] = Math.max(0, Math.min(255, d[i + j] * k + nz)); }
+  ctx.putImageData(im, 0, 0);
+  setTimeout(() => readCanvas(ctx), 20);
+}
+$("test").onclick = testScan;
+
+// Live camera (works when the page is hosted where the browser allows camera access)
+let stream = null, timer = null;
+function stopLive() { if (timer) clearInterval(timer); timer = null; if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; $("video").hidden = true; $("photo").hidden = false; $("live").textContent = "Live camera"; }
+$("live").onclick = async () => {
+  if (stream) { stopLive(); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
+  } catch (e) {
+    $("result").className = "result bad"; $("status").textContent = "Live camera isn't available here";
+    $("decoded").textContent = ""; $("meta").textContent = "Use Take photo instead: on a phone it opens the camera app."; return;
+  }
+  const v = $("video"); v.srcObject = stream; v.hidden = false; $("photo").hidden = true; await v.play();
+  $("live").textContent = "Stop camera"; $("status").textContent = "Point the camera at a code…"; $("result").className = "result";
+  const grab = document.createElement("canvas"), gctx = grab.getContext("2d", { willReadFrequently: true });
+  timer = setInterval(() => {
+    if (!v.videoWidth) return;
+    const s = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight));
+    grab.width = Math.round(v.videoWidth * s); grab.height = Math.round(v.videoHeight * s);
+    gctx.drawImage(v, 0, 0, grab.width, grab.height);
+    const found = PM.readImageData(gctx.getImageData(0, 0, grab.width, grab.height), { first: true });
+    if (found.length) { const ctx = showImage(grab, grab.width, grab.height); found.forEach((f) => outline(ctx, f.corners, "#17b26a")); stopLive(); showResult(found); }
+  }, 350);
+};
+
+$("copy").onclick = async () => {
+  const text = $("decoded").textContent;
+  try { await navigator.clipboard.writeText(text); $("copy").textContent = "Copied"; }
+  catch { const r = document.createRange(); r.selectNodeContents($("decoded")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("copy").textContent = "Selected, press copy"; }
+  setTimeout(() => ($("copy").textContent = "Copy text"), 1800);
+};
+
+$("text").addEventListener("input", makeCode);
+document.querySelectorAll("input[name=level]").forEach((r) => r.addEventListener("change", makeCode));
+document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { $("text").value = b.dataset.ex; makeCode(); }));
+makeCode();
+testScan();
+</script>

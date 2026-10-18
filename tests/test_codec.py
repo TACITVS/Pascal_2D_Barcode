@@ -130,7 +130,7 @@ def test_text_mode_round_trip(text):
 
 def test_text_mode_property():
     rng = random.Random(9)
-    alphabet = b"abcxyz019./:-_?=&%#@ABC\xff\x00https://www.com"
+    alphabet = b"abcxyz019./:-_?=&%#@ABCXYZ$\xff\x00https://www.com"
     for _ in range(300):
         s = bytes(rng.choice(alphabet) for _ in range(rng.randrange(40)))
         assert unpack_text(pack_text(s)) == s

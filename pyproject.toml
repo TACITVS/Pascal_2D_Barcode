@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pascal-mds"
+version = "1.0.0"
+description = "PASCAL-MDS: a compact 2D barcode built on a Pascal-basis Reed-Solomon code over GF(257)"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+reader = ["numpy>=1.26", "Pillow>=10"]
+bench = ["numpy>=1.26", "Pillow>=10", "opencv-python-headless>=4.9", "segno>=1.6", "zxing-cpp>=2.2"]
+dev = ["pytest>=8", "numpy>=1.26", "Pillow>=10"]
+
+[project.scripts]
+pascal-mds = "pascal_mds.__main__:main"
+
+[tool.setuptools]
+packages = ["pascal_mds"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
