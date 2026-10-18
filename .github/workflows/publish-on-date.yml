@@ -1,0 +1,78 @@
+# Makes this repository public on the date in .github/publish-on.
+# To postpone, change the date; to cancel, delete the file.
+# Needs a repository secret PUBLISH_TOKEN (see .github/PUBLISH_ON_DATE.md).
+name: publish-on-date
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # every day at 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only check the date and the token; change nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Is the date reached?
+        id: due
+        run: |
+          set -euo pipefail
+          f=.github/publish-on
+          if [ ! -f "$f" ]; then
+            echo "No $f: publication cancelled. Nothing to do."
+            exit 0
+          fi
+          when=$(grep -Eom1 '^[0-9]{4}-[0-9]{2}-[0-9]{2}' "$f" || true)
+          if [ -z "$when" ]; then
+            echo "::error::$f must start with a date like 2027-10-18"
+            exit 1
+          fi
+          today=$(date -u +%F)
+          echo "Scheduled: $when (UTC). Today: $today."
+          if [[ "$today" < "$when" ]]; then
+            echo "Not yet."
+            [ "${{ inputs.dry_run }}" = "true" ] && echo "run=check" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=publish" >> "$GITHUB_OUTPUT"
+
+      - name: Check token, then make the repository public
+        if: steps.due.outputs.run != ''
+        env:
+          GH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          MODE: ${{ steps.due.outputs.run }}
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Repository secret PUBLISH_TOKEN is missing; see .github/PUBLISH_ON_DATE.md"
+            exit 1
+          fi
+          visibility=$(gh api "repos/$REPO" --jq .visibility)
+          echo "Visibility now: $visibility."
+          if [ "$visibility" = "public" ]; then
+            echo "Already public."
+            exit 0
+          fi
+          # A no-op write (same visibility) needs the same permission as the
+          # real change, so it proves the token works without changing anything.
+          if ! gh api -X PATCH "repos/$REPO" -f visibility="$visibility" --silent; then
+            echo "::error::PUBLISH_TOKEN cannot change repository settings (needs Administration: Read and write)"
+            exit 1
+          fi
+          if [ "$MODE" = "check" ] || [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run: the token works; nothing changed."
+            exit 0
+          fi
+          gh api -X PATCH "repos/$REPO" -f visibility=public --jq '"Now: " + .visibility'

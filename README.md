@@ -25,7 +25,7 @@ static host works, for example GitHub Pages. No build step, no dependencies.
 Python (3.11+; the photo reader needs `numpy` and `Pillow`):
 
 ```
-cd pascal_mds
+pip install -e ".[reader]"     # or just run from the repository root
 python -m pascal_mds encode "https://www.example.com/menu" -o menu.png
 python -m pascal_mds decode photo.jpg
 python -m pascal_mds info            # capacity table
@@ -107,8 +107,15 @@ tests/               pytest suite + vectors.json (known-answer vectors)
 web/                 pascal_mds.js (JS port), index.html (app), node tests
 bench/               benchmark.py and recorded results
 SPEC.md              symbol specification, Theorem 1, handout/referee audit
+.github/workflows/   CI (Python + Node tests) and the scheduled publish switch
 ```
 
-Tests: `python -m pytest -q tests` (from this directory) and
+Tests: `python -m pytest -q` and
 `node web/test_node.js`. `tests/test_js_port.py` runs the Node test and the
 cross-language photo check when Node is installed.
+
+## Scheduled publication
+
+This repository is private and is set to become public automatically on the
+date in `.github/publish-on` (see `.github/PUBLISH_ON_DATE.md`). To postpone or
+cancel, edit or delete that file.
