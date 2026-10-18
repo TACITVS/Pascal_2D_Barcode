@@ -24,8 +24,11 @@ from capacity import DARK, LIGHT, OFFS, Channel, bilinear, render
 from multistage import STAGES, known_offsets, stage_rows
 
 D = LIGHT - DARK
-RAD = 3  # neighbourhood radius in modules (7 x 7 neighbours)
+RAD = 4  # neighbourhood radius in modules (9 x 9 neighbours)
 NB = [(dr, dc) for dr in range(-RAD, RAD + 1) for dc in range(-RAD, RAD + 1)]
+
+
+LAT = RAD + 2.0  # half-width of the response lattice, modules
 
 
 @lru_cache(maxsize=None)
@@ -33,7 +36,7 @@ def response_grid(pitch: float, blur: float) -> np.ndarray:
     """R on the half-module lattice: R[(dy+4.5)*2, (dx+4.5)*2] = darkening
     (0..1) at displacement (dx, dy) modules from a single dark module's
     centre, averaged over sub-pixel phases."""
-    lattice = np.arange(-4.5, 4.51, 0.5)
+    lattice = np.arange(-LAT, LAT + 0.01, 0.5)
     acc = np.zeros((len(lattice), len(lattice)))
     ch = Channel(pitch, blur, 0.0, 0, 2)
     rng = np.random.default_rng(0)
@@ -58,8 +61,8 @@ def footprints(pitch: float, blur: float) -> np.ndarray:
         for oy in OFFS:
             for ox in OFFS:
                 dx, dy = ox - dc, oy - dr
-                if abs(dx) <= 4.5 and abs(dy) <= 4.5:
-                    F[ni, j] = R[int(round((dy + 4.5) * 2)), int(round((dx + 4.5) * 2))]
+                if abs(dx) <= LAT and abs(dy) <= LAT:
+                    F[ni, j] = R[int(round((dy + LAT) * 2)), int(round((dx + LAT) * 2))]
                 j += 1
     return F
 
@@ -84,7 +87,9 @@ def stage_filter(F: np.ndarray, known: set, noise: float):
 def stage_llr(y, x_known, F, flt):
     """y: (m, 49) samples; x_known: (m, len(kn)) values of known neighbours."""
     w, bias, kn, unk = flt
-    z = y - LIGHT + D * (x_known @ F[kn]) + (D / 2) * F[unk].sum(0)
+    # modules beyond the neighbourhood darken each sample by D/2 * (1 - sum F)
+    # on average (the footprints of all modules sum to 1)
+    z = y - LIGHT + D * (x_known @ F[kn]) + (D / 2) * F[unk].sum(0) + (D / 2) * (1 - F.sum(0))
     return z @ w + bias
 
 
@@ -110,7 +115,7 @@ def estimate_blur(img, cx, cy, mods, ch, rng, grid=np.arange(0.4, 3.01, 0.05)):
     best = None
     for b in grid:
         F = footprints(ch.pitch, float(b))
-        err = ((y - (LIGHT - D * (x @ F))) ** 2).mean()
+        err = ((y - (LIGHT - D * (x @ F) - (D / 2) * (1 - F.sum(0)))) ** 2).mean()
         if best is None or err < best[0]:
             best = (err, float(b))
     return best[1], float(np.sqrt(best[0]))
