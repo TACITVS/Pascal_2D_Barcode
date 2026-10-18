@@ -73,8 +73,9 @@ class XorShift32:
 
 
 def _seed(*parts) -> int:
+    """FNV-1a of the parts joined with '/', e.g. 'ira/30/B/0'."""
     h = 2166136261
-    for p in str(parts).encode():
+    for p in "/".join(str(x) for x in parts).encode():
         h = ((h ^ p) * 16777619) & 0xFFFFFFFF
     return h
 

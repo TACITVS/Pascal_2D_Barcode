@@ -617,5 +617,11 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="${light}"/><path fill="${dark}" d="${d}"/></svg>`;
   }
 
-  return { encode, decodeModules, readGray, readImageData, toSVG, packText, unpackText, version, maxErasures, SIZES, LEVELS, pascalExtend, gaoDecode, polyEval };
+  return {
+    encode, decodeModules, readGray, readImageData, toSVG, packText, unpackText, version, maxErasures, SIZES, LEVELS,
+    pascalExtend, gaoDecode, polyEval,
+    // building blocks shared with the v2 (dense) reader in pascal_mds_v2.js
+    _internals: { binAdaptive, binOtsu, candidateQuads, locate, homography, applyH, makeSampler, solve, frameValue,
+                  boxDownscale, inside, header, bestPayload },
+  };
 });
