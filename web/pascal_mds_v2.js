@@ -348,6 +348,8 @@
       for (const quad of I.candidateQuads(bin(g, W, Hh), W, Hh)) {
         const cx = quad.reduce((s, p) => s + p[0], 0) / 4, cy = quad.reduce((s, p) => s + p[1], 0) / 4;
         if (found.some((f) => I.inside([cx, cy], f.cornersLocal))) continue;
+        // opts.skip: corners (input-image coordinates) of symbols already decoded elsewhere
+        if (opts.skip && opts.skip.some((c) => I.inside([cx * scale, cy * scale], c))) continue;
         const loc = I.locate(Smp, quad); if (!loc) continue;
         const S = 2 * loc.n; if (!SIZES.includes(S)) continue;
         let res = null;
