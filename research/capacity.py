@@ -82,6 +82,7 @@ def render(mods: np.ndarray, ch: Channel, rng: np.random.Generator):
         img = cv2.imdecode(enc, cv2.IMREAD_GRAYSCALE).astype(np.float64)
     cx = phase[0] + (np.arange(cols) + 0.5) * ch.pitch
     cy = phase[1] + (np.arange(rows) + 0.5) * ch.pitch
+    render.last_blur = blur  # the blur actually applied (for diagnostics only)
     return img, cx, cy
 
 

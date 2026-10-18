@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import zlib
 import time
+from pathlib import Path
 
 import numpy as np
 from sklearn.neural_network import MLPClassifier
@@ -77,12 +79,33 @@ def train_stage_models(ch: Channel, side: int, images: int, seed: int):
     return models, rates
 
 
+def worst_case_rates(models, ch: Channel, side: int, images: int, seed: int) -> list[float]:
+    """Stage information rates on photos rendered at the blurriest end of the
+    design range, scored with the (blur-agnostic) trained detectors.  H - CE
+    of a mismatched detector is still an achievable-rate lower bound."""
+    worst = Channel(ch.pitch, ch.blur * (1 + ch.blur_jitter), ch.noise, ch.jpeg, ch.levels, 0.0, ch.grid_error)
+    rng = np.random.default_rng(seed)
+    nll = [[] for _ in STAGES]
+    for _ in range(images):
+        mods = rng.integers(0, 2, (side, side))
+        img, cx, cy = render(mods, worst, rng)
+        for k in range(4):
+            rr, cc = stage_rows(side, k)
+            f = features(img, cx, cy, rr, cc, worst, rng)
+            nb = [mods[rr + dr, cc + dc] for dr, dc in known_offsets(k)]
+            x = np.hstack([f, np.stack(nb, 1)]) if nb else f
+            p = models[k].predict_proba(x)[np.arange(len(rr)), mods[rr, cc]]
+            nll[k].append(-np.log2(np.clip(p, 1e-12, 1)))
+    return [float(max(0.0, 1 - np.concatenate(v).mean())) for v in nll]
+
+
 def llr_from(model, x):
     p1 = np.clip(model.predict_proba(x)[:, 1], 1e-9, 1 - 1e-9)
     return np.log((1 - p1) / p1)  # > 0 means bit 0
 
 
-def simulate(ch: Channel, side: int, models, codes, trials: int, seed: int):
+def simulate(ch: Channel, side: int, models, codes, trials: int, seed: int, temper: float = 1.0,
+             log: list | None = None):
     rng = np.random.default_rng(seed)
     decs = [Decoder(c) for c in codes]
     ok = 0
@@ -107,11 +130,13 @@ def simulate(ch: Channel, side: int, models, codes, trials: int, seed: int):
             f = features(img, cx, cy, rr, cc, ch, rng)
             nb = [est[rr + dr, cc + dc] for dr, dc in known_offsets(k)]
             x = np.hstack([f, np.stack(nb, 1)]) if nb else f
-            bits, conv = decs[k].decode(llr_from(models[k], x), iters=80)
+            bits, conv = decs[k].decode(temper * llr_from(models[k], x), iters=80)
             if not conv or not np.array_equal(bits, cw):
                 good = False
                 break
             est[rr, cc] = bits
+        if log is not None:
+            log.append({"blur": float(render.last_blur), "failed_stage": None if good else k})
         ok += good
     return ok / trials
 
@@ -125,13 +150,28 @@ def main():
     ap.add_argument("--train-images", type=int, default=40)
     ap.add_argument("--trials", type=int, default=20)
     ap.add_argument("--backoffs", default="0.04,0.07,0.10,0.14")
+    ap.add_argument("--temper", type=float, default=1.0, help="scale detector LLRs (diagnostic)")
+    ap.add_argument("--diagnose", action="store_true", help="print per-frame blur and failing stage")
+    ap.add_argument("--design", choices=["average", "worst"], default="average",
+                    help="set stage code rates from the average channel or its blurriest end")
     a = ap.parse_args()
     ch = (Channel(a.pitch, a.blur, 6.0, 75, 2, 0.25, 0.1) if a.realistic
           else Channel(a.pitch, a.blur))
     t0 = time.time()
-    models, rates = train_stage_models(ch, a.side, a.train_images, seed=11)
+    import pickle
+    cache = Path(__file__).parent / "model_cache" / f"{zlib.crc32(repr((ch, a.side, a.train_images)).encode()):08x}.pkl"
+    if cache.exists():
+        models, rates = pickle.loads(cache.read_bytes())
+    else:
+        models, rates = train_stage_models(ch, a.side, a.train_images, seed=11)
+        cache.parent.mkdir(exist_ok=True)
+        cache.write_bytes(pickle.dumps((models, rates)))
     print(f"channel {ch}\nstage information rates (bits/module): " + ", ".join(f"{r:.3f}" for r in rates)
           + f"  mean {np.mean(rates):.3f}   [{time.time() - t0:.0f}s]", flush=True)
+    if a.design == "worst":
+        rates = worst_case_rates(models, ch, a.side, 10, seed=12)
+        print("worst-case stage rates (blur " + f"{ch.blur * (1 + ch.blur_jitter):.2f}): "
+              + ", ".join(f"{r:.3f}" for r in rates) + f"  mean {np.mean(rates):.3f}", flush=True)
     n_stage = len(stage_rows(a.side, 0)[0])
     results = []
     for back in map(float, a.backoffs.split(",")):
@@ -139,8 +179,12 @@ def main():
         for k, r in enumerate(rates):
             rate = max(0.05, min(0.97, r - back))
             kk = int(round(rate * n_stage))
-            codes.append(make_ira(kk, n_stage - kk, dv=3, seed=k))
-        succ = simulate(ch, a.side, models, codes, a.trials, seed=99)
+            codes.append(make_ira(kk, n_stage - kk, seed=k))
+        log = []
+        succ = simulate(ch, a.side, models, codes, a.trials, seed=99, temper=a.temper, log=log)
+        if a.diagnose:
+            for e in sorted(log, key=lambda e: e["blur"]):
+                print(f"    blur {e['blur']:.2f}  {'ok' if e['failed_stage'] is None else 'FAILED at stage ' + str(e['failed_stage'])}")
         info = sum(c.k for c in codes)
         area = (len(stage_rows(a.side, 0)[0]) * 4) * a.pitch ** 2
         dens = info / area
@@ -148,7 +192,13 @@ def main():
                          "bits_per_px2": dens})
         print(f"backoff {back:.2f}: rate {info / (4 * n_stage):.3f} bits/module = {dens:.3f} bits/px2, "
               f"frames decoded {succ:.0%}", flush=True)
-    print(json.dumps({"channel": ch.__dict__, "stage_rates": rates, "results": results}))
+    record = {"channel": ch.__dict__, "design": a.design, "stage_rates": rates, "trials": a.trials,
+              "results": results}
+    tag = f"{'real' if a.realistic else 'ideal'}_p{a.pitch}_b{a.blur}_{a.design}"
+    path = Path(__file__).parent / "multistage_results" / f"{tag}.json"
+    path.parent.mkdir(exist_ok=True)
+    path.write_text(json.dumps(record, indent=1))
+    print("wrote", path)
 
 
 if __name__ == "__main__":

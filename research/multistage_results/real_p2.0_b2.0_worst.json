@@ -1,0 +1,45 @@
+{
+ "channel": {
+  "pitch": 2.0,
+  "blur": 2.0,
+  "noise": 6.0,
+  "jpeg": 75,
+  "levels": 2,
+  "blur_jitter": 0.25,
+  "grid_error": 0.1
+ },
+ "design": "worst",
+ "stage_rates": [
+  0.21116583058228477,
+  0.23938204188725987,
+  0.3676061480410421,
+  0.7311489455526035
+ ],
+ "trials": 30,
+ "results": [
+  {
+   "backoff": 0.0,
+   "success": 0.8666666666666667,
+   "bits_per_module": 0.3873386089129529,
+   "bits_per_px2": 0.09683465222823823
+  },
+  {
+   "backoff": 0.03,
+   "success": 0.8333333333333334,
+   "bits_per_module": 0.35735110370678885,
+   "bits_per_px2": 0.08933777592669721
+  },
+  {
+   "backoff": 0.06,
+   "success": 0.9333333333333333,
+   "bits_per_module": 0.32736359850062474,
+   "bits_per_px2": 0.08184089962515619
+  },
+  {
+   "backoff": 0.1,
+   "success": 1.0,
+   "bits_per_module": 0.28738025822573926,
+   "bits_per_px2": 0.07184506455643482
+  }
+ ]
+}
