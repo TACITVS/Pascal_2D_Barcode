@@ -1,11 +1,17 @@
 """Build the screen/print test sheet: QR and PASCAL-MDS codes at equal sizes.
 
-Every code encodes the same kind of text with a different size tag
-(a1..a6, b1..b5, c1..c5), so one photo shows the smallest size each
+Every code encodes the same kind of text with a size tag naming its set and
+width in CSS px (a220, b150, ...), so one photo shows the smallest size each
 symbology survives.  python fieldtest/make_sheet.py  ->  fieldtest/sheet.html
 
 The sheet is a paged viewer: codes keep their exact test widths and are
 packed into pages that fill the window; arrow keys page through them.
+
+Round 3 is a distance test.  Round 2 showed that below ~2.5 screen pixels
+per module every symbology fails on the screen itself (fieldtest/RESULTS.md),
+so every code here has at least 3 CSS px per module and the camera distance
+is the variable.  Code pages are always white: on a dark page the phone
+exposes for the dark screen and the codes bloom.
 """
 
 from __future__ import annotations
@@ -30,10 +36,11 @@ NOTES = ("Meeting notes 18 Oct: the new barcode reads at half the printed size o
          "Next: field tests with printed sheets at 0.5, 1, 1.5 and 2 m, normal room light, three phones. "
          "Contact Jane Doe (jane.doe@example.com) for the test kit; budget PX-2207. Tag {tag}.")
 V2_LEVEL = "A"  # densest; best in every benchmark condition (bench/RESULTS_v2.md)
+# widths in CSS px; the smallest gives >= 3 px per module for every symbology
 SETS = [
-    ("a", "Link, 53 characters", LINK, [220, 150, 105, 75, 55, 40]),
-    ("b", "Contact card, 104 characters", CONTACT, [260, 180, 125, 90, 65]),
-    ("c", "Notes, 300 characters", NOTES, [320, 230, 165, 120, 90]),
+    ("a", "Link", LINK, [220, 160, 120, 100]),
+    ("b", "Contact card", CONTACT, [260, 190, 150, 125]),
+    ("c", "Notes", NOTES, [320, 260, 200]),
 ]
 
 
@@ -65,9 +72,10 @@ def items() -> list[dict]:
     """One entry per code: tag, kind, symbol width, SVG and its plate size."""
     out = []
     for key, title, template, widths in SETS:
-        for i, w in enumerate(widths, 1):
-            tag = f"{key}{i}"
+        for w in widths:
+            tag = f"{key}{w}"
             text = template.format(tag=tag)
+            title_n = f"{title}, {len(text)} characters"
             qr = segno.make_qr(text, error="m", boost_error=False)
             qm = [list(r) for r in qr.matrix]
             codes = [("QR", f"QR {len(qm)}×{len(qm)}", svg(qm, 4, w, f"QR Code {tag}"))]
@@ -79,7 +87,7 @@ def items() -> list[dict]:
             v, grid = dense.encode(text, V2_LEVEL)
             codes.append(("Dense", f"Dense {v.S}×{v.S}", svg(grid.tolist(), dense.QUIET, w, f"PASCAL-MDS Dense {tag}")))
             for kind, detail, (markup, tw, th) in codes:
-                out.append({"tag": tag, "set": title, "kind": kind, "detail": detail, "w": w,
+                out.append({"tag": tag, "set": title_n, "kind": kind, "detail": detail, "w": w,
                             "pw": round(tw, 2), "ph": round(th, 2), "svg": markup})
     # largest first: every page then holds codes of similar size
     order = {"QR": 0, "Std": 1, "Dense": 2}
@@ -111,14 +119,17 @@ TEMPLATE = """<!doctype html>
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; overflow: hidden; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); user-select: none; -webkit-user-select: none; }
+/* Code pages stay white in every theme: on a dark page the phone exposes for
+   the dark screen and the white codes bloom into their dark modules. */
+body.codes { background: #fff; }
 body.idle, body.idle * { cursor: none; }
 #stage { position: fixed; inset: 0 0 var(--barh, 30px) 0; display: flex; flex-direction: column; justify-content: space-evenly; padding: 8px 10px; }
 .shelf { display: flex; justify-content: space-evenly; align-items: flex-end; }
 .item { display: grid; justify-items: center; gap: 2px; }
 .plate { background: #fff; line-height: 0; }
 .plate svg { display: block; }
-.cap { font: 11px/13px var(--mono); color: var(--muted); white-space: nowrap; }
-.cap b { color: var(--accent); }
+.cap { font: 11px/13px var(--mono); color: #5a6170; white-space: nowrap; }
+.cap b { color: #2f44cf; }
 #bar { position: fixed; left: 0; right: 0; bottom: 0; height: var(--barh, 30px); display: flex; align-items: center; justify-content: space-between;
   gap: 12px; padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
   background: var(--bar); border-top: 1px solid var(--line); font: 12px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; }
@@ -169,12 +180,12 @@ function cover() {
   return `<div class="cover">
     <h1>Barcode Distance Test</h1>
     <p>${n} codes: QR, PASCAL-MDS Standard and PASCAL-MDS Dense, each at several exact widths (${sets}).
-      Every code carries a size tag (a1, b3, …) in its text, so each photo shows which sizes were read.</p>
+      Every code carries a size tag in its text (a160 = link, 160 px wide), so each photo shows which sizes were read.</p>
     <ol>
-      <li>Set the browser zoom to 100% and the screen brightness high. Press <kbd>F</kbd> for full screen.</li>
+      <li>Set the browser zoom to 100% and the screen brightness to about two thirds. Press <kbd>F</kbd> for full screen.</li>
       <li>Press <kbd>→</kbd> or <kbd>Space</kbd> for the next batch of codes, <kbd>←</kbd> to go back. Tapping the right or left half of the screen also works.</li>
-      <li>Photograph each batch with your phone's normal camera from 0.5 m, 1 m, 1.5 m and 2 m, straight on, then a few at an angle.</li>
-      <li>Upload the photos in the chat; every code in every photo gets decoded and compared.</li>
+      <li>This is a distance test: photograph each batch with the phone's normal 1× camera, no zoom, straight on, from 1 m, 1.5 m, 2 m, 3 m and 4 m. Tap the codes on the phone screen first so it focuses and exposes on them.</li>
+      <li>Upload the photos in the chat, with the distance of each if you can (in the file name or the message); every code in every photo gets decoded and compared.</li>
     </ol>
     <p class="note">Codes are shown at their exact test widths and never rescaled; the batches repack when the window changes size.
       Screen scaling here: ${Math.round(devicePixelRatio * 100)}%.</p>
@@ -183,12 +194,14 @@ function cover() {
 
 function itemHtml(i) {
   const it = ITEMS[i];
-  return `<div class="item" title="${it.set} · ${it.detail} · ${it.w} px"><div class="plate">${it.svg}</div>` +
+  // no title attribute: a hover tooltip would cover codes in the photos
+  return `<div class="item"><div class="plate">${it.svg}</div>` +
          `<div class="cap"><b>${it.tag}</b> ${it.kind} ${it.w}</div></div>`;
 }
 
 function show(p) {
   current = Math.max(0, Math.min(p, pages.length));
+  document.body.classList.toggle("codes", current > 0);
   if (current === 0) {
     stage.innerHTML = cover();
     where.innerHTML = `<b>Instructions</b> · ${pages.length} pages of codes`;

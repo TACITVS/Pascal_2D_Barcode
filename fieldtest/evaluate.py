@@ -21,13 +21,17 @@ sys.path.insert(0, str(ROOT / "research"))
 sys.path.insert(0, str(ROOT / "research" / "v2"))
 from pascal_mds.reader import read  # noqa: E402
 
-TAGS = [f"{s}{i}" for s, n in (("a", 6), ("b", 5), ("c", 5)) for i in range(1, n + 1)]
+def tag_order(tag: str):
+    """Set, then size: round 2 numbered sizes (a1 largest), round 3 names
+    the width in CSS px (a220 largest)."""
+    n = int(tag[1:])
+    return (tag[0], -n if n > 9 else n)
 
 
 def tags_in(texts) -> set[str]:
     found = set()
     for t in texts:
-        m = re.search(r"(?:ref=|NOTE:|Tag )([abc]\d)", t)
+        m = re.search(r"(?:ref=|NOTE:|Tag )([abc]\d+)", t)
         if m:
             found.add(m.group(1))
     return found
@@ -51,10 +55,9 @@ def main() -> None:
     for p in sys.argv[1:]:
         r = evaluate(p)
         print(f"\n{r['photo']}  ({r['size'][0]}x{r['size'][1]})")
-        print("  tag   QR   Standard  Dense")
-        for t in TAGS:
-            if any(t in r[k] for k in ("qr", "pascal", "dense")):
-                print(f"  {t}    {'yes' if t in r['qr'] else ' - '}   {'yes' if t in r['pascal'] else ' - ':8s}  {'yes' if t in r['dense'] else ' - '}")
+        print("  tag    QR   Standard  Dense")
+        for t in sorted(r["qr"] | r["pascal"] | r["dense"], key=tag_order):
+            print(f"  {t:5s} {'yes' if t in r['qr'] else ' - '}   {'yes' if t in r['pascal'] else ' - ':8s}  {'yes' if t in r['dense'] else ' - '}")
 
 
 if __name__ == "__main__":
