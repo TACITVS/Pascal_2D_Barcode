@@ -250,9 +250,9 @@
     return x;
   }
   /** Linear filter for one known/unknown neighbour pattern (see research/v2_detector.py). */
-  function stageFilter(fp, knownMask, noise) {
+  function stageFilter(fp, knownMask, noise) { // noise: per-window-position standard deviations
     const { F } = fp, C = new Float64Array(49 * 49);
-    for (let j = 0; j < 49; j++) C[j * 49 + j] = noise * noise;
+    for (let j = 0; j < 49; j++) C[j * 49 + j] = noise[j] * noise[j];
     const unk = [], kn = [];
     NB.forEach((_, i) => { if (i === CENTRE) return; (knownMask[i] ? kn : unk).push(i); });
     const q = (D * D) / 4;
@@ -274,7 +274,7 @@
   }
   class Photo {
     constructor(sampler, corners, S, mirrored) {
-      this.Smp = sampler; this.S = S; this.H = moduleH(corners, S, mirrored); this.kappa = 1;
+      this.Smp = sampler; this.S = S; this.H = moduleH(corners, S, mirrored); this.kappa = 1; this.gamma = 1;
       const xs = [], ys = [], vs = [];
       for (let r = -QUIET; r < S + QUIET; r++) for (let c = -QUIET; c < S + QUIET; c++) {
         if (Math.min(r, c, S - 1 - r, S - 1 - c) > -2) continue;
@@ -286,46 +286,59 @@
       this.known = new Int8Array((S + 2 * QUIET) ** 2); const fm = frameModules(S), W = S + 2 * QUIET;
       for (let r = 0; r < S; r++) for (let c2 = 0; c2 < S; c2++) this.known[(r + QUIET) * W + c2 + QUIET] = fm[r * S + c2];
     }
-    darkening(r, c) {
+    /** Samples relative to the light surface, clamped to [0, 1.5]. */
+    relative(r, c) {
       const lt = Math.max(1, quadEval(this.light, (c + 0.5) / this.S - 0.5, (r + 0.5) / this.S - 0.5)), out = new Float64Array(49); let j = 0;
-      for (const oy of OFFS) for (const ox of OFFS) { const [u, v] = I.applyH(this.H, c + 0.5 + ox, r + 0.5 + oy); out[j++] = (lt - this.Smp(u, v)) / lt; }
+      for (const oy of OFFS) for (const ox of OFFS) { const [u, v] = I.applyH(this.H, c + 0.5 + ox, r + 0.5 + oy); out[j++] = Math.min(1.5, Math.max(0, this.Smp(u, v) / lt)); }
       return out;
     }
+    /** Darkening through the tone curve: 1 - relative ** gamma. */
+    darkening(r, c) { const out = this.relative(r, c); for (let j = 0; j < 49; j++) out[j] = 1 - out[j] ** this.gamma; return out; }
     knownAt(r, c) { const W = this.S + 2 * QUIET, rr = r + QUIET, cc = c + QUIET; if (rr < 0 || cc < 0 || rr >= W || cc >= W) return 0; return this.known[rr * W + cc]; }
   }
-  function estimate(ph) {
+  // Candidate tone curves; read tries the linear model first (see reader2.py).
+  const GAMMAS = [1, 1.5, 2, 2.5, 3, 4, 5];
+  /** Tone curve, blur and contrast fitted to the frame; noise per window position (see reader2.py). */
+  function estimate(ph, gammas) {
     const S = ph.S, rows = [];
-    for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) if (ph.knownAt(r, c) >= 0) rows.push([r, c, ph.darkening(r, c), NB.map(([dr, dc]) => { const v = ph.knownAt(r + dr, c + dc); return v < 0 ? 0.5 : v; })]);
+    for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) if (ph.knownAt(r, c) >= 0) rows.push([ph.relative(r, c), NB.map(([dr, dc]) => { const v = ph.knownAt(r + dr, c + dc); return v < 0 ? 0.5 : v; })]);
+    const ds = gammas.map((g) => rows.map(([rel]) => Float64Array.from(rel, (x) => 1 - x ** g)));
+    const fit = (b) => { // model darkening m and unknown-neighbour variance u for every frame sample
+      const fp = footprints(ph.pitch, b), ms = [], us = [];
+      for (const [, x] of rows) { const m = new Float64Array(49), u = new Float64Array(49);
+        for (let i = 0; i < NB.length; i++) { if (!x[i]) continue; const f = fp.F[i], xi = x[i];
+          for (let j = 0; j < 49; j++) { m[j] += xi * f[j]; if (xi === 0.5) u[j] += f[j] * f[j]; } }
+        for (let j = 0; j < 49; j++) m[j] += fp.far[j]; ms.push(m); us.push(u); }
+      let mm = 0; for (const m of ms) for (let j = 0; j < 49; j++) mm += m[j] * m[j];
+      return gammas.map((gamma, gi) => {
+        let dm = 0; ds[gi].forEach((d, i) => { const m = ms[i]; for (let j = 0; j < 49; j++) dm += d[j] * m[j]; });
+        const kappa = Math.max(dm / Math.max(mm, 1e-9), 0.05), excess = new Float64Array(49); let err = 0;
+        ds[gi].forEach((d, i) => { const m = ms[i], u = us[i];
+          for (let j = 0; j < 49; j++) { const e = d[j] - kappa * m[j]; err += e * e; excess[j] += ((D / kappa) * e) ** 2 - (D * D / 4) * u[j]; } });
+        let ex = 0; for (let j = 0; j < 49; j++) { excess[j] /= rows.length; ex += excess[j]; }
+        // linear model alone: plain least squares; across tone curves: the excess (see reader2.py)
+        return { misfit: gammas.length === 1 ? err : ex, gamma, blur: Math.round(b * 100) / 100, kappa, excess };
+      });
+    };
     let best = null;
-    for (let b = 0.3; b <= 3.5001; b += 0.05) {
-      const fp = footprints(ph.pitch, b); let dm = 0, mm = 0; const ms = [];
-      for (const [, , d, x] of rows) { const m = new Float64Array(49);
-        for (let i = 0; i < NB.length; i++) if (x[i]) { const f = fp.F[i], xi = x[i]; for (let j = 0; j < 49; j++) m[j] += xi * f[j]; }
-        for (let j = 0; j < 49; j++) { m[j] += fp.far[j]; dm += d[j] * m[j]; mm += m[j] * m[j]; } ms.push(m); }
-      const kappa = dm / Math.max(mm, 1e-9); let err = 0;
-      rows.forEach(([, , d], i) => { const m = ms[i]; for (let j = 0; j < 49; j++) err += (d[j] - kappa * m[j]) ** 2; });
-      if (!best || err < best.err) best = { err, blur: Math.round(b * 100) / 100, kappa };
-    }
-    ph.kappa = Math.max(best.kappa, 0.05);
-    // model mismatch beyond the unknown neighbours' variance counts as noise (see reader2.py)
-    let r2 = 0, uv = 0, cnt = 0;
-    { const fp = footprints(ph.pitch, best.blur);
-      for (const [, , d, x] of rows) for (let j = 0; j < 49; j++) {
-        let m = fp.far[j], u = 0;
-        for (let i = 0; i < NB.length; i++) { if (!x[i]) continue; const f = fp.F[i][j]; m += x[i] * f; if (x[i] === 0.5) u += f * f; }
-        r2 += ((D / ph.kappa) * (d[j] - ph.kappa * m)) ** 2; uv += (D * D / 4) * u; cnt++;
-      } }
-    const mismatch2 = Math.max(0, (r2 - uv) / cnt);
+    const consider = (b) => { for (const f of fit(b)) if (!best || f.misfit < best.misfit) best = f; };
+    for (let b = 0.3; b <= 3.5001; b += 0.25) consider(b); // coarse, then refine around the best
+    const b0 = best.blur; for (let b = Math.max(0.3, b0 - 0.2); b <= b0 + 0.2001; b += 0.05) consider(b);
+    ph.kappa = best.kappa; ph.gamma = best.gamma;
     const vals = [];
     for (let r = -QUIET; r < S + QUIET; r++) for (let c = -QUIET; c < S + QUIET; c++) {
       const d = Math.min(r, c, S - 1 - r, S - 1 - c); if (d !== -3 && d !== -4) continue;
       vals.push(LIGHT - (D * ph.darkening(r, c)[24]) / ph.kappa);
     }
-    const mean = vals.reduce((a, b) => a + b, 0) / vals.length, sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
-    return { blur: best.blur, noise: Math.max(3, Math.sqrt(sd * sd + mismatch2)) };
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length, sd2 = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length;
+    // per-position model mismatch counts as that position's noise (see reader2.py)
+    return { blur: best.blur, kappa: best.kappa, gamma: best.gamma, noise: Array.from(best.excess, (e) => Math.max(3, Math.sqrt(sd2 + Math.max(0, e)))) };
   }
-  function decodeSymbol(sampler, corners, S, mirrored, level) {
-    const ph = new Photo(sampler, corners, S, mirrored), est = estimate(ph), fp = footprints(ph.pitch, est.blur);
+  // LLR scales tried in turn when a stage fails to decode (see reader2.py).
+  const LLR_SCALES = [1, 0.5, 0.25];
+  function decodeSymbol(sampler, corners, S, mirrored, level, est) {
+    const ph = new Photo(sampler, corners, S, mirrored); ph.kappa = est.kappa; ph.gamma = est.gamma;
+    const fp = footprints(ph.pitch, est.blur);
     const v = version(S, level), W = S + 2 * QUIET, state = Int8Array.from(ph.known); // -1 = undecided data
     const at = (r, c) => { const rr = r + QUIET, cc = c + QUIET; if (rr < 0 || cc < 0 || rr >= W || cc >= W) return 0; return state[rr * W + cc]; };
     const info = new Uint8Array(v.infoBits); let pos = 0;
@@ -347,15 +360,19 @@
         }
         llr[i] = sc[i] ? -L : L;
       }
-      for (let i = 0; i < llr.length; i++) llr[i] = Math.max(-30, Math.min(30, llr[i]));
       // wrong level/orientation/format: raw decisions violate ~half the checks (see reader2.py)
       if (k === 0 && unsatisfiedFraction(code, llr) > 0.42) return null;
-      const bits = ldpcDecode(code, llr); if (!bits) return null;
+      let bits = null;
+      for (const scale of LLR_SCALES) {
+        bits = ldpcDecode(code, Float64Array.from(llr, (x) => Math.max(-30, Math.min(30, scale * x))));
+        if (bits) break;
+      }
+      if (!bits) return null;
       info.set(bits.subarray(0, code.k), pos); pos += code.k;
       for (let i = 0; i < rows.length; i++) state[(rows[i] + QUIET) * W + cols[i] + QUIET] = bits[i] ^ sc[i];
     }
     const data = decodeInfoBits(v, info);
-    return data ? { data, text: new TextDecoder().decode(data), S, level, mirrored, blur: est.blur, pitch: ph.pitch } : null;
+    return data ? { data, text: new TextDecoder().decode(data), S, level, mirrored, blur: est.blur, pitch: ph.pitch, gamma: est.gamma } : null;
   }
   function readGray(gray, w, h, opts = {}) {
     const maxSide = opts.maxSide || 2400, levels = opts.levels || "ABC";
@@ -371,8 +388,14 @@
         if (opts.skip && opts.skip.some((c) => I.inside([cx * scale, cy * scale], c))) continue;
         const loc = I.locate(Smp, quad); if (!loc) continue;
         const S = 2 * loc.n; if (!SIZES.includes(S)) continue;
-        let res = null;
-        for (const mirrored of [false, true]) { for (const lv of levels) { res = decodeSymbol(Smp, loc.corners, S, mirrored, lv); if (res) break; } if (res) break; }
+        // linear model first, then the best-fitting tone curve (blur, contrast and noise do not depend on level or orientation)
+        let res = null; const tried = new Set();
+        for (const gammas of [[1], GAMMAS]) {
+          const est = estimate(new Photo(Smp, loc.corners, S, false), gammas);
+          if (tried.has(est.gamma)) continue; tried.add(est.gamma);
+          for (const mirrored of [false, true]) { for (const lv of levels) { res = decodeSymbol(Smp, loc.corners, S, mirrored, lv, est); if (res) break; } if (res) break; }
+          if (res) break;
+        }
         if (res) found.push({ ...res, cornersLocal: loc.corners, corners: loc.corners.map(([x, y]) => [x * scale, y * scale]) });
         if (opts.first && found.length) return found;
       }

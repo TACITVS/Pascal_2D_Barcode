@@ -104,12 +104,13 @@ def samples(img, cx, cy, rows, cols, ch, rng):
     return np.stack([bilinear(img, px + ox * ch.pitch, py + oy * ch.pitch) for oy in OFFS for ox in OFFS], 1)
 
 
-def stage_filter(F: np.ndarray, known: set, noise: float):
-    """(w, bias, known_idx, unknown_idx) for one stage."""
+def stage_filter(F: np.ndarray, known: set, noise):
+    """(w, bias, known_idx, unknown_idx) for one stage.  noise: standard
+    deviation of the samples, one value or one per window position."""
     centre = NB.index((0, 0))
     unk = [i for i, o in enumerate(NB) if o != (0, 0) and o not in known]
     kn = [i for i, o in enumerate(NB) if o in known]
-    C = noise ** 2 * np.eye(F.shape[1]) + (D ** 2 / 4) * F[unk].T @ F[unk]
+    C = np.diag(np.broadcast_to(np.square(noise), F.shape[1])) + (D ** 2 / 4) * F[unk].T @ F[unk]
     a = D * F[centre]
     w = np.linalg.solve(C, a)
     return w, 0.5 * a @ w, kn, unk

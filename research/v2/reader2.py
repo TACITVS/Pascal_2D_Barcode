@@ -56,9 +56,10 @@ def _quad_eval(c, xs, ys):
 
 class Photo:
     """Grey image + geometry of one located symbol.  Illumination is modelled
-    as y = light(x) * (1 - kappa * darkening), with light(x) a quadratic
-    surface fitted to the quiet zone; kappa (contrast) and the blur are fitted
-    to the frame by estimate()."""
+    as (y / light(x)) ** gamma = 1 - kappa * darkening, with light(x) a
+    quadratic surface fitted to the quiet zone; gamma (the camera's tone
+    curve), kappa (contrast) and the blur are fitted to the frame by
+    estimate()."""
 
     def __init__(self, gray, corners, S, mirrored):
         self.gray, self.S, self.mirrored = gray, S, mirrored
@@ -70,7 +71,7 @@ class Photo:
         cc = np.array([p[1] for p in ring])
         vals = sample(gray, *apply_h(self.h, cc + 0.5, rr + 0.5))
         self.fit_light = _quad_fit((cc + 0.5) / S - 0.5, (rr + 0.5) / S - 0.5, vals)
-        self.kappa = 1.0
+        self.kappa, self.gamma = 1.0, 1.0
         c = S / 2
         x0, y0 = apply_h(self.h, np.array([c - 1, c + 1]), np.array([c, c]))
         x1, y1 = apply_h(self.h, np.array([c, c]), np.array([c - 1, c + 1]))
@@ -84,55 +85,72 @@ class Photo:
         return g
 
     def darkening(self, rows, cols):
-        """Relative darkening (light - y) / light on the 7 x 7 window grid."""
+        """Relative darkening 1 - (y / light) ** gamma on the 7 x 7 window grid."""
         y = window_samples(self.gray, self.h, rows, cols)
         lt = _quad_eval(self.fit_light, (cols + 0.5) / self.S - 0.5, (rows + 0.5) / self.S - 0.5)[:, None]
-        return (lt - y) / np.maximum(lt, 1.0)
+        return 1 - np.clip(y / np.maximum(lt, 1.0), 0, 1.5) ** self.gamma
 
     def normalised(self, rows, cols):
         """Samples on the detector's scale: light -> LIGHT, full dark -> DARK."""
         return LIGHT - D * self.darkening(rows, cols) / self.kappa
 
 
-def estimate(ph: Photo):
-    """Blur and contrast by least squares on the frame modules (data
-    neighbours at their mean); noise from the quiet zone 3-4 modules out.
-    Sets ph.kappa; returns (blur_px, noise in detector grey levels)."""
+# Candidate tone curves.  Phones store gamma-encoded, tone-mapped pixels,
+# and overexposed screens bloom, so the half-light at a module edge reads
+# lighter than mid-grey.  The frame fit does not predict decoding well (on
+# simulated photos it prefers 1.5 while 1.0 decodes better), so read() tries
+# the linear model first and the best-fitting curve only if that fails.
+GAMMAS = (1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0)
+
+
+def estimate(ph: Photo, gammas=(1.0,)):
+    """Tone curve, blur and contrast by least squares on the frame modules
+    (data neighbours at their mean); noise per window position.
+    Sets ph.gamma and ph.kappa; returns (blur_px, noise): noise is the
+    standard deviation, in detector grey levels, of each of the 49 window
+    samples."""
     S, Q = ph.S, QUIET
     known = ph.known_grid()
     fr, fc = np.nonzero(known[Q:Q + S, Q:Q + S] >= 0)
-    d = ph.darkening(fr, fc)
+    y = window_samples(ph.gray, ph.h, fr, fc)
+    lt = _quad_eval(ph.fit_light, (fc + 0.5) / S - 0.5, (fr + 0.5) / S - 0.5)[:, None]
+    rel = np.clip(y / np.maximum(lt, 1.0), 0, 1.5)
     kg = np.pad(known, det.RAD, constant_values=0)
     x = np.stack([kg[fr + Q + det.RAD + dr, fc + Q + det.RAD + dc] for dr, dc in NB], 1).astype(float)
     x[x < 0] = 0.5
+    unknown = (x == 0.5).astype(float)
     pitch = round(ph.pitch, 2)
 
-    def fit(b):
+    def fit(gamma, b):
+        """(misfit, gamma, blur, kappa, per-position excess variance).
+        With the linear model alone the misfit is the plain least-squares
+        residual.  Across tone curves it is the residual beyond what the
+        unknown data neighbours explain, on the detector scale (measured to
+        pick curves that decode the round-2 photos)."""
+        d = 1 - rel ** gamma
         F = det.footprints(pitch, b)
         m = x @ F + 0.5 * (1 - F.sum(0))
-        kappa = float((d * m).sum() / max((m * m).sum(), 1e-9))
-        return float(((d - kappa * m) ** 2).mean()), b, kappa
+        kappa = max(float((d * m).sum() / max((m * m).sum(), 1e-9)), 0.05)
+        excess = ((D / kappa) * (d - kappa * m)) ** 2 - (D * D / 4) * (unknown @ (F * F))
+        misfit = float(((d - kappa * m) ** 2).mean()) if len(gammas) == 1 else float(excess.mean())
+        return misfit, gamma, b, kappa, np.maximum(excess.mean(0), 0.0)
 
-    # coarse grid, then refine around the best point
-    best = min(fit(round(b, 2)) for b in np.arange(0.3, 3.51, 0.25))
-    best = min(fit(round(b, 2)) for b in np.arange(max(0.3, best[1] - 0.2), best[1] + 0.21, 0.05))
-    _, blur, kappa = best
-    ph.kappa = max(kappa, 0.05)
-    # Model mismatch: frame residual beyond what the unknown data neighbours
-    # explain.  Crisp, pixel-snapped renderings (screens, screenshots) or
-    # sharpening break the footprint model; counting the misfit as noise
-    # keeps the soft information honest instead of confidently wrong.
-    F = det.footprints(pitch, blur)
-    m = x @ F + 0.5 * (1 - F.sum(0))
-    resid = (D / ph.kappa) * (d - ph.kappa * m)
-    unknown_var = (D * D / 4) * ((x == 0.5).astype(float) @ (F * F))
-    mismatch2 = max(0.0, float((resid ** 2).mean() - unknown_var.mean()))
+    # coarse grid, then refine the blur around the best point
+    best = min((fit(g, round(b, 2)) for g in gammas for b in np.arange(0.3, 3.51, 0.25)), key=lambda t: t[0])
+    best = min((fit(best[1], round(b, 2)) for b in np.arange(max(0.3, best[2] - 0.2), best[2] + 0.21, 0.05)),
+               key=lambda t: t[0])
+    _, ph.gamma, blur, ph.kappa, mismatch2 = best
+    # Model mismatch per window position: crisp, pixel-snapped renderings,
+    # sharpening halos and screen bloom break the footprint model mostly at
+    # module edges.  Counting each position's misfit as its own noise keeps
+    # the soft information honest there and lets the clean module centres
+    # carry the decision.
     ring = [(r, c) for r in range(-Q, S + Q) for c in range(-Q, S + Q)
             if min(r, c, S - 1 - r, S - 1 - c) in (-3, -4)]
     rr = np.array([p[0] for p in ring])
     cc = np.array([p[1] for p in ring])
     vals = ph.normalised(rr, cc)[:, len(OFFS) ** 2 // 2]
-    return blur, float(max(3.0, np.sqrt(np.var(vals) + mismatch2)))
+    return blur, np.maximum(3.0, np.sqrt(np.var(vals) + mismatch2))
 
 
 # Fraction of parity checks violated by the raw hard decisions.  A wrong
@@ -151,15 +169,24 @@ def unsatisfied_fraction(code, llr) -> float:
     return float(s.mean())
 
 
-def decode_symbol(gray, corners, S, mirrored, level, blur=None, noise=None, kappa=None):
-    """Decode one hypothesis.  blur/noise/kappa: pass the estimates from a
+# LLR scales tried in turn when a stage fails to decode.  The detector's
+# Gaussian model is overconfident on real photos (screen bloom, sharpening,
+# tone mapping): on the round-2 photos scaling the LLRs down by 2-4x
+# recovered most of the information an oracle scale gives.  A success is
+# verified by the parity checks and the outer code, so the retries cost
+# time only on stages that fail and never change a successful decode.
+LLR_SCALES = (1.0, 0.5, 0.25)
+
+
+def decode_symbol(gray, corners, S, mirrored, level, est=None):
+    """Decode one hypothesis.  est: (blur, noise, kappa, gamma) from a
     previous hypothesis on the same symbol (they do not depend on level or
     orientation) to skip re-estimating them."""
     ph = Photo(gray, corners, S, mirrored)
-    if blur is None:
+    if est is None:
         blur, noise = estimate(ph)
     else:
-        ph.kappa = kappa
+        blur, noise, ph.kappa, ph.gamma = est
     F = det.footprints(round(ph.pitch, 2), round(blur, 2))
     v = version(S, level)
     Q, R = QUIET, det.RAD
@@ -190,8 +217,11 @@ def decode_symbol(gray, corners, S, mirrored, level, blur=None, noise=None, kapp
         llr = np.where(sc == 1, -llr, llr)
         if k == 0 and unsatisfied_fraction(code, llr) > REJECT_ABOVE:
             return None  # wrong level, orientation or format: checks look random
-        bits, ok = Decoder(code).decode(np.clip(llr, -30, 30), iters=80)
-        if not ok:
+        for scale in LLR_SCALES:
+            bits, ok = Decoder(code).decode(np.clip(scale * llr, -30, 30), iters=80)
+            if ok:
+                break
+        else:
             return None
         info.append(bits[:code.k])
         state[rr + off, cc + off] = bits ^ sc
@@ -221,11 +251,19 @@ def read(image, max_side: int = 2400, levels: str = "ABC") -> list[Result]:
             if S not in dense.SIZES:
                 continue
             res = None
-            ph = Photo(gray, corners, S, False)
-            blur, noise = estimate(ph)
-            for mirrored in (False, True):
-                for level in levels:
-                    res = decode_symbol(gray, corners, S, mirrored, level, blur, noise, ph.kappa)
+            tried = set()
+            for gammas in ((1.0,), GAMMAS):
+                ph = Photo(gray, corners, S, False)
+                blur, noise = estimate(ph, gammas)
+                if ph.gamma in tried:
+                    continue
+                tried.add(ph.gamma)
+                est = (blur, noise, ph.kappa, ph.gamma)
+                for mirrored in (False, True):
+                    for level in levels:
+                        res = decode_symbol(gray, corners, S, mirrored, level, est)
+                        if res:
+                            break
                     if res:
                         break
                 if res:
