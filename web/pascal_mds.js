@@ -554,7 +554,8 @@
         if (d) found.push({ ...d, corners: loc.corners });
         if (opts.first && found.length) break;
       }
-      if (found.length) break;
+      // both binarisations always run (see reader.py); stop early only when asked
+      if (opts.first && found.length) break;
     }
     return found.map((f) => ({ ...f, corners: f.corners.map(([x, y]) => [x * scale, y * scale]) }));
   }
