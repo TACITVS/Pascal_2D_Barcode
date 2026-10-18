@@ -569,8 +569,8 @@ def read(image, max_side: int = 1600) -> list[Detection]:
             decoded = decode_at(gray, corners, n)
             if decoded is not None:
                 found.append(Detection(decoded, corners * scale))
-        if found:
-            break
+    # Both binarisations always run: a symbol that one of them outlines badly
+    # may still be found by the other (already-decoded regions are skipped).
     return found
 
 
