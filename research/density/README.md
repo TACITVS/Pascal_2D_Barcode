@@ -23,6 +23,12 @@ an offline screen target kit and paired distance captures. Generate it with
 `python research/density/analyze_screen_photo.py --manifest /tmp/pascal-photo-kit/manifest.json photo.jpg`.
 HEIC input additionally needs `pillow-heif`. The external markers provide
 registration assistance and are accounted separately from barcode area.
+For tightly cropped photos whose markers touch the image boundary, the
+optional `--recover-cropped` flag identifies the target from consistent marker
+IDs and locates its known timing frame in the original image. Enlarged padded
+images are used only to identify markers. Payload decoding uses the original
+captured resolution after rectification. Report this recovery separately from
+the default marker-registration pipeline; it does not recover missing data bits.
 
 ![Exact encoded patterns and density results](density_results.png)
 

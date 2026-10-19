@@ -15,7 +15,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "research/density"))
 
-from analyze_screen_photo import analyze  # noqa: E402
+from analyze_screen_photo import analyze, register  # noqa: E402
 from screen_targets import TargetCase, board_array, make_cases  # noqa: E402
 
 
@@ -89,3 +89,17 @@ def test_photo_cli_checkpoint_and_resume(cases: list[TargetCase], tmp_path: Path
     rows = [json.loads(line) for line in output.read_text().splitlines()]
     assert len(rows) == 1 and rows[0]["reads"][0]["decoded_exactly"]
     assert "reading A2.png" in first.stdout and "reading A2.png" not in second.stdout
+
+
+@pytest.mark.parametrize("index", [1, 3])
+def test_edge_touching_markers_recover_using_frame(cases: list[TargetCase], index: int) -> None:
+    case = cases[index]
+    board = board_array(case)
+    trim = case.layout.gap * 4
+    cropped = board[trim:-trim, trim:-trim].astype(np.float32)
+    manifest = fixture_manifest(cases)
+    assert not register(cropped, manifest)
+    rows = analyze(cropped, manifest, recover_cropped=True)
+    assert len(rows) == 1 and rows[0]["decoded_exactly"]
+    assert rows[0]["registration"] == "barcode_frame_with_marker_id"
+    assert rows[0]["registration_rms_px"] is None

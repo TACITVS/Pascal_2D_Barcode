@@ -1,7 +1,8 @@
-"""PM257-PHOTO-READER-2026-10-19-v1: assisted screen-fixture analysis.
+"""PM257-PHOTO-READER-2026-10-19-v1.1: assisted screen-fixture analysis.
 
-External markers identify a target and register its plane. Both formats use
-the same registered crop. Optical nuisance fitting uses the known frame and
+External markers identify a target; optional cropped-image recovery locates
+its known timing frame. Both formats use the same registered crop.
+Optical nuisance fitting uses the known frame and
 quiet zone only; payload truth is consulted after decoding for verification.
 Rectification introduces interpolation and does not preserve white noise.
 """
@@ -32,8 +33,11 @@ class Registration:
     case: dict[str, object]
     homography: np.ndarray
     markers: int
-    residual_px: float
+    residual_px: float | None
     corners: np.ndarray
+    method: str = "assisted_external_markers"
+    marker_ids: tuple[int, ...] = ()
+    frame_score: float | None = None
 
 
 def load_photo(path: Path) -> np.ndarray:
@@ -81,6 +85,54 @@ def register(gray: np.ndarray, manifest: dict[str, object]) -> list[Registration
                          [origin + side, origin + side], [origin, origin + side]], float)
         found.append(Registration(case, h, len(sources) // 4, residual, project(h, code)))
     return found
+
+
+def register_cropped_frame(gray: np.ndarray, manifest: dict[str, object]) -> list[Registration]:
+    """Recover one tightly cropped fixture without using its payload bits.
+
+    Padding helps identify edge-touching markers. Enlarged images are used
+    for marker identification only; frame geometry and payload decoding use
+    the original pixels. Two consistent marker IDs identify the configured
+    target; its known timing frame supplies the homography.
+    """
+    dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
+    padding = 24
+    background = float(np.median(gray[:5]))
+    padded = np.clip(np.pad(gray, padding, constant_values=background), 0, 255).astype(np.uint8)
+    observed: set[int] = set()
+    for scale in (1, 2, 3, 4):
+        image = (cv2.resize(padded, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+                 if scale != 1 else padded)
+        detector = cv2.aruco.ArucoDetector(dictionary, cv2.aruco.DetectorParameters())
+        _, identifiers, _ = detector.detectMarkers(image)
+        if identifiers is not None:
+            observed.update(map(int, identifiers.ravel()))
+    ranked = sorted(((len(observed.intersection(case["marker_ids"])), case)
+                     for case in manifest["cases"]), key=lambda pair: pair[0], reverse=True)
+    ambiguous = len(ranked) > 1 and ranked[0][0] == ranked[1][0]
+    if not ranked or ranked[0][0] < 2 or ambiguous:
+        return []
+    count, case = ranked[0]
+    best = None
+    for binarize in (reader2.binarize_adaptive, reader2.binarize_otsu):
+        for quad in reader2.candidate_quads(gray, binarize(gray)):
+            located = reader2.locate(gray, quad)
+            if located is None:
+                continue
+            corners, coarse_side, score = located
+            if 2 * coarse_side != int(case["S"]) or score < 0.8:
+                continue
+            if best is None or score > best[2]:
+                best = (corners, coarse_side, score)
+    if best is None:
+        return []
+    corners, _, score = best
+    origin, size = int(case["code_origin_units"]) + int(case["quiet"]), int(case["S"])
+    source = np.array([[origin, origin], [origin + size, origin],
+                       [origin + size, origin + size], [origin, origin + size]], np.float32)
+    h = cv2.getPerspectiveTransform(source, corners.astype(np.float32))
+    return [Registration(case, h, count, None, corners, "barcode_frame_with_marker_id",
+                         tuple(sorted(observed.intersection(case["marker_ids"]))), float(score))]
 
 
 def rectify(gray: np.ndarray, registration: Registration) -> tuple[np.ndarray, float]:
@@ -141,9 +193,13 @@ def decode_crop(image: np.ndarray, pitch: float, case: dict[str, object]) -> tup
             raise ValueError("unsupported fixture profile")
 
 
-def analyze(gray: np.ndarray, manifest: dict[str, object]) -> list[dict[str, object]]:
+def analyze(gray: np.ndarray, manifest: dict[str, object],
+            recover_cropped: bool = False) -> list[dict[str, object]]:
     rows = []
-    for registration in register(gray, manifest):
+    registrations = register(gray, manifest)
+    if not registrations and recover_cropped:
+        registrations = register_cropped_frame(gray, manifest)
+    for registration in registrations:
         start = time.perf_counter()
         crop, pitch = rectify(gray, registration)
         decoded, details = decode_crop(crop, pitch, registration.case)
@@ -160,7 +216,9 @@ def analyze(gray: np.ndarray, manifest: dict[str, object]) -> list[dict[str, obj
                      "registration_rms_px": registration.residual_px,
                      "registered_corners": registration.corners.tolist(), "details": details,
                      "seconds": time.perf_counter() - start,
-                     "registration": "assisted_external_markers",
+                     "registration": registration.method,
+                     "marker_ids": list(registration.marker_ids),
+                     "frame_score": registration.frame_score,
                      "truth_used_only_after_decoding": True})
     return rows
 
@@ -186,9 +244,11 @@ def main() -> None:
     parser.add_argument("photos", type=Path, nargs="+")
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--out", type=Path, default=Path("/tmp/pascal-screen-reads.jsonl"))
+    parser.add_argument("--recover-cropped", action="store_true",
+                        help="identify clipped markers and locate the known barcode frame when marker registration fails")
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text())
-    source = decoder_fingerprint()
+    source = hashlib.sha256((decoder_fingerprint() + str(args.recover_cropped)).encode()).hexdigest()
     manifest_hash = hashlib.sha256(args.manifest.read_bytes()).hexdigest()
     previous = [json.loads(line) for line in args.out.read_text().splitlines()] if args.out.exists() else []
     done = {(row["input_sha256"], row["decoder_sha256"], row.get("manifest_sha256")) for row in previous}
@@ -202,7 +262,9 @@ def main() -> None:
             print(f"[{index + 1}/{len(args.photos)}] reading {path.name}", flush=True)
             try:
                 image = load_photo(path)
-                result = {"photo": path.name, "shape": list(image.shape), "reads": analyze(image, manifest)}
+                result = {"photo": path.name, "shape": list(image.shape),
+                          "reads": analyze(image, manifest, recover_cropped=args.recover_cropped),
+                          "recover_cropped": args.recover_cropped}
             except (OSError, ValueError, RuntimeError) as exc:
                 result = {"photo": path.name, "error": str(exc), "reads": []}
             result.update({"input_sha256": checksum, "decoder_sha256": source,
