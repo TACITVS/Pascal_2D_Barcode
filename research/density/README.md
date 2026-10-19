@@ -16,6 +16,14 @@ or phone has been validated in this experiment. There is no proof that the
 complete format reaches maximum channel capacity, and no claim that joint
 optical decoding or the underlying coding theory is newly invented.
 
+For the next physical experiment, [PHOTO_PROTOCOL.md](PHOTO_PROTOCOL.md) describes
+an offline screen target kit and paired distance captures. Generate it with
+`python research/density/screen_targets.py --out /tmp/pascal-photo-kit`, then open
+`START_PHOTO_TEST.html`. Analyze original files with
+`python research/density/analyze_screen_photo.py --manifest /tmp/pascal-photo-kit/manifest.json photo.jpg`.
+HEIC input additionally needs `pillow-heif`. The external markers provide
+registration assistance and are accounted separately from barcode area.
+
 ![Exact encoded patterns and density results](density_results.png)
 
 ## What changed
