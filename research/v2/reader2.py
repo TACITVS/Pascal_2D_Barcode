@@ -103,15 +103,27 @@ class Photo:
 GAMMAS = (1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0)
 
 
-def estimate(ph: Photo, gammas=(1.0,)):
-    """Tone curve, blur and contrast by least squares on the frame modules
-    (data neighbours at their mean); noise per window position.
+# Most modules a refit samples (evenly spaced over the known ones); enough
+# for the four model parameters and the 49 noise levels, and keeps a refit
+# on a large symbol fast.
+MAX_FIT_MODULES = 1500
+
+
+def estimate(ph: Photo, gammas=(1.0,), known=None):
+    """Tone curve, blur and contrast by least squares on the known modules
+    (data neighbours at their mean); noise per window position.  known:
+    (S+2Q) x (S+2Q) grid of 0/1 known modules and -1 unknown; default the
+    frame and quiet zone, after a stage decodes also its modules.
     Sets ph.gamma and ph.kappa; returns (blur_px, noise): noise is the
     standard deviation, in detector grey levels, of each of the 49 window
     samples."""
     S, Q = ph.S, QUIET
-    known = ph.known_grid()
+    if known is None:
+        known = ph.known_grid()
     fr, fc = np.nonzero(known[Q:Q + S, Q:Q + S] >= 0)
+    if len(fr) > MAX_FIT_MODULES:
+        keep = np.linspace(0, len(fr) - 1, MAX_FIT_MODULES).astype(int)
+        fr, fc = fr[keep], fc[keep]
     y = window_samples(ph.gray, ph.h, fr, fc)
     lt = _quad_eval(ph.fit_light, (fc + 0.5) / S - 0.5, (fr + 0.5) / S - 0.5)[:, None]
     rel = np.clip(y / np.maximum(lt, 1.0), 0, 1.5)
@@ -178,41 +190,58 @@ def unsatisfied_fraction(code, llr) -> float:
 LLR_SCALES = (1.0, 0.5, 0.25)
 
 
-def decode_symbol(gray, corners, S, mirrored, level, est=None):
+def stage_llrs(ph: Photo, F, noise, state, k: int, filters: dict) -> np.ndarray:
+    """LLRs (> 0: light) of stage k's modules given the decided ones in state
+    ((S+2Q+2R)^2, -1 = undecided); filters caches one filter per pattern of
+    known neighbours."""
+    S, Q, R = ph.S, QUIET, det.RAD
+    off = Q + R
+    rr, cc = coset_positions(S, k)
+    y = ph.normalised(rr, cc)
+    nb_vals = np.stack([state[rr + off + dr, cc + off + dc] for dr, dc in NB], 1)
+    llr = np.empty(len(rr))
+    masks = nb_vals >= 0
+    keys, inverse = np.unique(np.packbits(masks, axis=1), axis=0, return_inverse=True)
+    inverse = inverse.ravel()
+    for gi in range(len(keys)):
+        sel = np.flatnonzero(inverse == gi)
+        known_set = {NB[i] for i in np.flatnonzero(masks[sel[0]]) if NB[i] != (0, 0)}
+        key = tuple(sorted(known_set))
+        flt = filters.get(key)
+        if flt is None:
+            flt = filters[key] = det.stage_filter(F, known_set, noise)
+        kn = flt[2]
+        xk = nb_vals[sel][:, kn].astype(float) if kn else np.zeros((len(sel), 0))
+        llr[sel] = det.stage_llr(y[sel], xk, F, flt)
+    return llr
+
+
+def decode_symbol(gray, corners, S, mirrored, level, est=None, gammas=(1.0,)):
     """Decode one hypothesis.  est: (blur, noise, kappa, gamma) from a
     previous hypothesis on the same symbol (they do not depend on level or
-    orientation) to skip re-estimating them."""
+    orientation) to skip re-estimating them.  gammas: tone curves the
+    refits may choose from.
+
+    After each stage decodes, the model is refitted on the frame plus every
+    module decoded so far.  The frame alone is a thin band with few
+    patterns; on the round-3 photos the refit raised the late stages'
+    information by up to 0.2 bit per module (e.g. 0.70 -> 0.91)."""
     ph = Photo(gray, corners, S, mirrored)
     if est is None:
-        blur, noise = estimate(ph)
+        blur, noise = estimate(ph, gammas)
     else:
         blur, noise, ph.kappa, ph.gamma = est
-    F = det.footprints(round(ph.pitch, 2), round(blur, 2))
     v = version(S, level)
     Q, R = QUIET, det.RAD
-    known = ph.known_grid()
-    state = np.pad(known.astype(np.int16), R, constant_values=0)  # -1 = undecided data
+    state = np.pad(ph.known_grid().astype(np.int16), R, constant_values=0)  # -1 = undecided data
     off = Q + R
     info = []
-    filters = {}
     for k, code in enumerate(codes(S, level)):
+        if k:
+            blur, noise = estimate(ph, gammas, state[R:-R, R:-R])
+        F = det.footprints(round(ph.pitch, 2), round(blur, 2))
+        llr = stage_llrs(ph, F, noise, state, k, {})
         rr, cc = coset_positions(S, k)
-        y = ph.normalised(rr, cc)
-        nb_vals = np.stack([state[rr + off + dr, cc + off + dc] for dr, dc in NB], 1)
-        llr = np.empty(len(rr))
-        masks = nb_vals >= 0
-        keys, inverse = np.unique(np.packbits(masks, axis=1), axis=0, return_inverse=True)
-        inverse = inverse.ravel()
-        for gi in range(len(keys)):
-            sel = np.flatnonzero(inverse == gi)
-            known_set = {NB[i] for i in np.flatnonzero(masks[sel[0]]) if NB[i] != (0, 0)}
-            key = (k, tuple(sorted(known_set)))
-            flt = filters.get(key)
-            if flt is None:
-                flt = filters[key] = det.stage_filter(F, known_set, noise)
-            kn = flt[2]
-            xk = nb_vals[sel][:, kn].astype(float) if kn else np.zeros((len(sel), 0))
-            llr[sel] = det.stage_llr(y[sel], xk, F, flt)
         sc = scramble(S, level, k, len(rr))
         llr = np.where(sc == 1, -llr, llr)
         if k == 0 and unsatisfied_fraction(code, llr) > REJECT_ABOVE:
@@ -261,7 +290,7 @@ def read(image, max_side: int = 2400, levels: str = "ABC") -> list[Result]:
                 est = (blur, noise, ph.kappa, ph.gamma)
                 for mirrored in (False, True):
                     for level in levels:
-                        res = decode_symbol(gray, corners, S, mirrored, level, est)
+                        res = decode_symbol(gray, corners, S, mirrored, level, est, gammas)
                         if res:
                             break
                     if res:
