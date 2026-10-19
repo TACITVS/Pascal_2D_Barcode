@@ -3,6 +3,11 @@
 Open START_PHOTO_TEST.html on the computer whose screen you will photograph.
 The file works offline. Use a normal desktop browser, 100% browser zoom, and
 the Full screen button (or F11). This is a target viewer, not a camera decoder.
+Viewer v1.1 stops at the first and last targets. Previous/Next and keyboard
+arrows never wrap. The viewer shows "Target 1 of 4" through "Target 4 of 4".
+Barcodes and marker identifiers are unchanged from v1, so existing photos
+remain compatible. Repeated photographs can be grouped by visible marker IDs;
+do not discard them because the previous viewer wrapped around.
 
 ## The four targets
 
