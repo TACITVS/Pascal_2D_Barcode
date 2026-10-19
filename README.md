@@ -74,10 +74,21 @@ QR read nothing beyond ~1.2 m; Standard and Dense read 220 px links at
 steps, so each figure bounds the true limit from above. Use Standard for
 short data and Dense when the data does not fit Standard.
 
-Simulated photos (`bench/benchmark_v2.py`, results in `bench/RESULTS_v2.md`)
-are being re-run for the current Dense format; the field tests showed the
-first simulator overstated how much later decoding stages gain from earlier
-ones.
+### Simulated photos (`bench/RESULTS_v2.md`)
+
+Smallest printed width read in ≥ 90% of simulated photos, camera pixels,
+QR / Standard / Dense:
+
+| Payload | Sharp photo | Blurry photo |
+|---|---|---|
+| Link, 53 B | 90 / 36 / **36** px | 165 / 90 / **75** px |
+| Contact, 118 B | 110 / 62 / **52** px | 200 / 135 / **110** px |
+| Notes, 300 B | 165 / – / **75** px | 300 / – / **165** px |
+| Binary, 500 B | 165 / – / **110** px | 450 / – / **245** px |
+
+Dense needs 2.2× to 6.3× less area than QR in simulation, in line with the
+2–5× measured on real photos. (The first Dense format scored better in
+simulation but worse on real photos; see `bench/RESULTS_v2.md`.)
 
 ## How v1 compares (simulated phone photos, first benchmark)
 
