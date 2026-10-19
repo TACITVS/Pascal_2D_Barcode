@@ -15,16 +15,23 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "research"))
+sys.path.insert(0, str(ROOT / "research" / "v2"))
 from pascal_mds.reader import read  # noqa: E402
 
-TAGS = ["a1", "a2", "a3", "a4", "a5", "a6", "b1", "b2", "b3", "b4", "b5"]
+def tag_order(tag: str):
+    """Set, then size: round 2 numbered sizes (a1 largest), round 3 names
+    the width in CSS px (a220 largest)."""
+    n = int(tag[1:])
+    return (tag[0], -n if n > 9 else n)
 
 
 def tags_in(texts) -> set[str]:
     found = set()
     for t in texts:
-        m = re.search(r"(?:ref=|NOTE:)([ab]\d)", t)
+        m = re.search(r"(?:ref=|NOTE:|Tag )([abc]\d+)", t)
         if m:
             found.add(m.group(1))
     return found
@@ -36,18 +43,21 @@ def evaluate(path: str) -> dict:
 
     qr = zxingcpp.read_barcodes(img, formats=zxingcpp.BarcodeFormat.QRCode)
     qr_tags = tags_in(r.text for r in qr)
-    pm = read(np.asarray(img, dtype=np.float32), max_side=2400)
-    pm_tags = tags_in(d.decoded.text for d in pm)
-    return {"photo": Path(path).name, "size": img.size, "qr": qr_tags, "pascal": pm_tags}
+    arr = np.asarray(img, dtype=np.float32)
+    pm_tags = tags_in(d.decoded.text for d in read(arr, max_side=max(arr.shape)))
+    import reader2
+
+    v2_tags = tags_in(r.data.decode("utf-8", "replace") for r in reader2.read(arr, max_side=max(arr.shape)))
+    return {"photo": Path(path).name, "size": img.size, "qr": qr_tags, "pascal": pm_tags, "dense": v2_tags}
 
 
 def main() -> None:
     for p in sys.argv[1:]:
         r = evaluate(p)
         print(f"\n{r['photo']}  ({r['size'][0]}x{r['size'][1]})")
-        print("  tag   QR   PASCAL")
-        for t in TAGS:
-            print(f"  {t}    {'yes' if t in r['qr'] else ' - '}   {'yes' if t in r['pascal'] else ' - '}")
+        print("  tag    QR   Standard  Dense")
+        for t in sorted(r["qr"] | r["pascal"] | r["dense"], key=tag_order):
+            print(f"  {t:5s} {'yes' if t in r['qr'] else ' - '}   {'yes' if t in r['pascal'] else ' - ':8s}  {'yes' if t in r['dense'] else ' - '}")
 
 
 if __name__ == "__main__":

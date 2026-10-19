@@ -133,12 +133,27 @@ td.win { color: var(--ok); font-weight: 700; }
         </div>
       </div>
       <div class="row">
+        <span class="hint" id="format-label">Format</span>
+        <div class="seg" role="radiogroup" aria-labelledby="format-label">
+          <label><input type="radio" name="format" id="fmt-v1" value="v1" checked><span>Standard</span></label>
+          <label><input type="radio" name="format" id="fmt-v2" value="v2"><span>Dense v2</span></label>
+        </div>
+      </div>
+      <div class="row" id="levels-v1">
         <span class="hint" id="level-label">Damage tolerance</span>
         <div class="seg" role="radiogroup" aria-labelledby="level-label">
           <label><input type="radio" name="level" id="lv-L" value="L"><span>L 7%</span></label>
           <label><input type="radio" name="level" id="lv-M" value="M" checked><span>M 15%</span></label>
           <label><input type="radio" name="level" id="lv-Q" value="Q"><span>Q 25%</span></label>
           <label><input type="radio" name="level" id="lv-H" value="H"><span>H 30%</span></label>
+        </div>
+      </div>
+      <div class="row" id="levels-v2" hidden>
+        <span class="hint" id="level2-label">Built for</span>
+        <div class="seg" role="radiogroup" aria-labelledby="level2-label">
+          <label><input type="radio" name="level2" id="lv-A" value="A" checked><span>A densest</span></label>
+          <label><input type="radio" name="level2" id="lv-B" value="B"><span>B</span></label>
+          <label><input type="radio" name="level2" id="lv-C" value="C"><span>C</span></label>
         </div>
       </div>
       <div class="symbol-stage">
@@ -183,25 +198,30 @@ td.win { color: var(--ok); font-weight: 700; }
   </div>
 
   <section class="bench" aria-labelledby="bench-h">
-    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 30 per point</span></div>
+    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 16 per size</span></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Payload</th><th>QR size</th><th>PASCAL size</th><th>Area incl. quiet zone</th><th>Smallest readable width*</th><th>Read with 6% blotted</th></tr></thead>
+        <thead><tr><th>Payload</th><th>Photo</th><th>QR Code</th><th>Standard</th><th>Dense v2</th><th>Dense vs QR area</th></tr></thead>
         <tbody>
-          <tr><td>Short link, 24 B</td><td class="num">25×25</td><td class="num">17×17</td><td class="num win">−60%</td><td class="num">QR 50 px · <b>40 px</b></td><td class="num">QR 33% · <b>83%</b></td></tr>
-          <tr><td>Link, 53 B</td><td class="num">33×33</td><td class="num">23×23</td><td class="num win">−57%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 40% · <b>90%</b></td></tr>
-          <tr><td>Wi-Fi, 52 B</td><td class="num">33×33</td><td class="num">25×25</td><td class="num win">−50%</td><td class="num">QR 75 px · <b>50 px</b></td><td class="num">QR 30% · <b>77%</b></td></tr>
-          <tr><td>Contact card, 118 B</td><td class="num">45×45</td><td class="num">35×35</td><td class="num win">−46%</td><td class="num">QR 110 px · <b>75 px</b></td><td class="num">QR 50% · <b>97%</b></td></tr>
+          <tr><td>Link, 53 B</td><td>sharp</td><td class="num">90 px</td><td class="num">36 px</td><td class="num"><b>30 px</b></td><td class="num win">9.0× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">165 px</td><td class="num">90 px</td><td class="num"><b>62 px</b></td><td class="num win">7.1× less</td></tr>
+          <tr><td>Contact card, 118 B</td><td>sharp</td><td class="num">110 px</td><td class="num">62 px</td><td class="num"><b>44 px</b></td><td class="num win">6.3× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">200 px</td><td class="num">135 px</td><td class="num"><b>90 px</b></td><td class="num win">4.9× less</td></tr>
+          <tr><td>Notes, 300 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>75 px</b></td><td class="num win">4.8× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">300 px</td><td class="num">–</td><td class="num"><b>165 px</b></td><td class="num win">3.3× less</td></tr>
+          <tr><td>Binary, 500 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>110 px</b></td><td class="num win">2.3× less</td></tr>
+          <tr><td></td><td>blurry</td><td class="num">450 px</td><td class="num">–</td><td class="num"><b>245 px</b></td><td class="num win">3.4× less</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="foot">*Symbol width in camera pixels at which at least 90% of photos decode; both codes printed at the same width, level M. QR read by zxing-cpp, the engine behind many phone scanners. These are simulations (rotation, perspective, blur, noise, JPEG, lighting), not field tests with real phones. Data Matrix, an existing ISO code, needed 7–13% more area than PASCAL-MDS on these payloads. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
+    <p class="foot">Smallest printed symbol width, in camera pixels, at which at least 90% of simulated phone photos decode (rotation, perspective, lens blur 0.7 px sharp or 2.0 px blurry, noise, JPEG, uneven light). QR level M read by zxing-cpp, the engine behind many phone scanners; Standard level M; Dense level A. "–": too long for Standard. In real phone photos of a screen, Standard read 47 codes where QR read 31; Dense is in its first real-photo round. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
   </section>
 </div>
 
 <script src="pascal_mds.js"></script>
+<script src="pascal_mds_v2.js"></script>
 <script>
-const PM = window.PascalMDS;
+const PM = window.PascalMDS, PM2 = window.PascalMDSv2;
 const QR_CAP = {"byte":{"l":[17,32,53,78,106,134,154,192,230,271,321,367,425,458,520,586,644,718,792,858,929,1003,1091,1171,1273,1367,1465,1528,1628,1732,1840,1952,2068,2188,2303,2431,2563,2699,2809,2953],"m":[14,26,42,62,84,106,122,152,180,213,251,287,331,362,412,450,504,560,624,666,711,779,857,911,997,1059,1125,1190,1264,1370,1452,1538,1628,1722,1809,1911,1989,2099,2213,2331],"q":[11,20,32,46,60,74,86,108,130,151,177,203,241,258,292,322,364,394,442,482,509,565,611,661,715,751,805,868,908,982,1030,1112,1168,1228,1283,1351,1423,1499,1579,1663],"h":[7,14,24,34,44,58,64,84,98,119,137,155,177,194,220,250,280,310,338,382,403,439,461,511,535,593,625,658,698,742,790,842,898,958,983,1051,1093,1139,1219,1273]},"alphanumeric":{"l":[25,47,77,114,154,195,224,279,335,395,468,535,619,667,758,854,938,1046,1153,1249,1352,1460,1588,1704,1853,1990,2132,2223,2369,2520,2677,2840,3009,3183,3351,3537,3729,3927,4087,4296],"m":[20,38,61,90,122,154,178,221,262,311,366,419,483,528,600,656,734,816,909,970,1035,1134,1248,1326,1451,1542,1637,1732,1839,1994,2113,2238,2369,2506,2632,2780,2894,3054,3220,3391],"q":[16,29,47,67,87,108,125,157,189,221,259,296,352,376,426,470,531,574,644,702,742,823,890,963,1041,1094,1172,1263,1322,1429,1499,1618,1700,1787,1867,1966,2071,2181,2298,2420],"h":[10,20,35,50,64,84,93,122,143,174,200,227,259,283,321,365,408,452,493,557,587,640,672,744,779,864,910,958,1016,1080,1150,1226,1307,1394,1431,1530,1591,1658,1774,1852]},"numeric":{"l":[41,77,127,187,255,322,370,461,552,652,772,883,1022,1101,1250,1408,1548,1725,1903,2061,2232,2409,2620,2812,3057,3283,3517,3669,3909,4158,4417,4686,4965,5253,5529,5836,6153,6479,6743,7089],"m":[34,63,101,149,202,255,293,365,432,513,604,691,796,871,991,1082,1212,1346,1500,1600,1708,1872,2059,2188,2395,2544,2701,2857,3035,3289,3486,3693,3909,4134,4343,4588,4775,5039,5313,5596],"q":[27,48,77,111,144,178,207,259,312,364,427,489,580,621,703,775,876,948,1063,1159,1224,1358,1468,1588,1718,1804,1933,2085,2181,2358,2473,2670,2805,2949,3081,3244,3417,3599,3791,3993],"h":[17,34,58,82,106,139,154,202,235,288,331,374,427,468,530,602,674,746,813,919,969,1056,1108,1228,1286,1425,1501,1581,1677,1782,1897,2022,2157,2301,2361,2524,2625,2735,2927,3057]}};
 const $ = (id) => document.getElementById(id);
 const enc = new TextEncoder();
@@ -225,33 +245,45 @@ function drawSymbol(canvas, sym, quiet = 2) {
   sym.modules.forEach((row, r) => row.forEach((v, c) => { if (v) ctx.fillRect(off + (c + quiet) * px, off + (r + quiet) * px, px, px); }));
 }
 
-function level() { return document.querySelector("input[name=level]:checked").value; }
+function format() { return document.querySelector("input[name=format]:checked").value; }
+function level() { return document.querySelector(format() === "v2" ? "input[name=level2]:checked" : "input[name=level]:checked").value; }
+const V2_NOTE = { A: "densest; best in every test so far", B: "more redundancy per module", C: "most redundancy per module" };
 
 function makeCode() {
   const text = $("text").value;
   const stats = $("stats"), cmp = $("compare");
+  const v2 = format() === "v2";
+  $("levels-v1").hidden = v2; $("levels-v2").hidden = !v2;
   try {
-    const sym = PM.encode(text, level());
-    current = { sym, text };
-    drawSymbol($("symbol"), sym);
+    const sym = v2 ? PM2.encode(text, level()) : PM.encode(text, level());
+    const quiet = v2 ? PM2.QUIET : 2, side = sym.modules.length;
+    current = { sym, text, quiet };
+    drawSymbol($("symbol"), sym, quiet);
     const v = sym.version, bytes = enc.encode(text).length;
     stats.innerHTML = "";
     const add = (k, val) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = val; stats.append(dt, dd); };
-    add("Symbol", `${v.n} × ${v.n} modules`);
+    add("Symbol", `${side} × ${side} modules`);
     add("Text", `${bytes} bytes`);
-    add("Code", `[${v.N}, ${v.K}] over GF(257)`);
-    add("Repairs", `${v.t} damaged bytes, or ${PM.maxErasures(v)} unreadable ones`);
+    if (v2) {
+      add("Code", `4 LDPC stages, ${v.infoBits} bits + GF(257) check`);
+      add("Built for", V2_NOTE[level()]);
+    } else {
+      add("Code", `[${v.N}, ${v.K}] over GF(257)`);
+      add("Repairs", `${v.t} damaged bytes, or ${PM.maxErasures(v)} unreadable ones`);
+    }
     add("Room left", `${v.capacity} payload bytes at this size`);
-    const q = qrSide(text, level());
+    const q = qrSide(text, v2 ? "M" : level());
     cmp.innerHTML = "";
     const minis = document.createElement("div"); minis.className = "minis"; minis.setAttribute("aria-hidden", "true");
     const scale = 40 / Math.max(q || v.n, v.n);
-    for (const [side, cls] of [[v.n + 4, "mini"], [q ? q + 8 : 0, "mini qr"]]) {
-      if (!side) continue; const d = document.createElement("div"); d.className = cls; d.style.width = d.style.height = (side * scale).toFixed(1) + "px"; minis.append(d);
+    for (const [sz, cls] of [[side + 2 * quiet, "mini"], [q ? q + 8 : 0, "mini qr"]]) {
+      if (!sz) continue; const d = document.createElement("div"); d.className = cls; d.style.width = d.style.height = (sz * scale).toFixed(1) + "px"; minis.append(d);
     }
     const p = document.createElement("div");
-    if (q) {
-      const saved = Math.round(100 * (1 - ((v.n + 4) ** 2) / ((q + 8) ** 2)));
+    if (q && v2) {
+      p.innerHTML = `QR Code needs <b>${q} × ${q}</b> modules for this text at level M. Dense modules are read jointly from grey levels, so they can be printed smaller than QR's: see the measurements below.`;
+    } else if (q) {
+      const saved = Math.round(100 * (1 - ((side + 2 * quiet) ** 2) / ((q + 8) ** 2)));
       p.innerHTML = `QR Code needs <b>${q} × ${q}</b> for this text at level ${level()}. With required margins this code uses <b>${saved}% less area</b>.`;
     } else p.textContent = "This text is beyond QR's largest version at this level.";
     cmp.append(minis, p);
@@ -259,7 +291,7 @@ function makeCode() {
   } catch (e) {
     current = null;
     const ctx = $("symbol").getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, 196, 196);
-    stats.innerHTML = ""; cmp.textContent = `Too long for one code at level ${level()}: ${e.message}. Try level L or shorten the text.`;
+    stats.innerHTML = ""; cmp.textContent = `Too long for one code at level ${level()}: ${e.message}. Try another level or shorten the text.`;
     $("save-png").disabled = $("save-svg").disabled = true;
   }
 }
@@ -282,10 +314,23 @@ async function save(filename, data, mime) {
 }
 $("save-png").onclick = () => {
   if (!current) return;
-  const c = document.createElement("canvas"); const n = current.sym.modules.length; c.width = c.height = (n + 4) * 20;
-  drawSymbol(c, current.sym); c.toBlob((b) => save("pascal-mds.png", b, "image/png"), "image/png");
+  const c = document.createElement("canvas"); const n = current.sym.modules.length; c.width = c.height = (n + 2 * current.quiet) * 20;
+  drawSymbol(c, current.sym, current.quiet); c.toBlob((b) => save("pascal-mds.png", b, "image/png"), "image/png");
 };
-$("save-svg").onclick = () => { if (current) save("pascal-mds.svg", PM.toSVG(current.sym, 20), "image/svg+xml"); };
+$("save-svg").onclick = () => { if (current) save("pascal-mds.svg", PM.toSVG(current.sym, 20, current.quiet), "image/svg+xml"); };
+
+// Read both formats; v2 symbols are skipped where a v1 symbol was found.
+function readAll(img, opts = {}) {
+  const v1 = PM.readImageData(img, opts).map((d) => ({ text: d.text, corners: d.corners,
+    meta: `${d.version.n}×${d.version.n} · level ${d.version.level} · repaired ${d.errors} byte${d.errors === 1 ? "" : "s"}` +
+      (d.erasures ? ` + ${d.erasures} unreadable` : "") + (d.mirrored ? " · mirrored" : "") }));
+  if (opts.first && v1.length) return v1;
+  const centre = (c) => [c.reduce((s, p) => s + p[0], 0) / 4, c.reduce((s, p) => s + p[1], 0) / 4];
+  const near = (a, b) => { const [ax, ay] = centre(a), [bx, by] = centre(b); return Math.hypot(ax - bx, ay - by) < 8; };
+  const v2 = PM2.readImageData(img, { ...opts, skip: v1.map((d) => d.corners) }).filter((d) => !v1.some((e) => near(e.corners, d.corners))).map((d) => ({
+    text: d.text, corners: d.corners, meta: `Dense ${d.S}×${d.S} · level ${d.level} · blur ${d.blur.toFixed(2)} px` + (d.mirrored ? " · mirrored" : "") }));
+  return v1.concat(v2);
+}
 
 // ---- reading
 function showImage(source, w, h) {
@@ -306,12 +351,11 @@ function showResult(found, ms) {
     $("decoded").textContent = ""; $("meta").textContent = "Fill more of the frame with the code, keep it in focus and leave a light margin around it.";
     $("result-actions").hidden = true; return;
   }
-  const d = found[0], v = d.version;
+  const d = found[0];
   box.className = "result ok";
   $("status").textContent = found.length > 1 ? `Read ${found.length} codes` : "Read";
   $("decoded").textContent = found.map((f) => f.text).join("\n\n");
-  $("meta").textContent = `${v.n}×${v.n} · level ${v.level} · repaired ${d.errors} byte${d.errors === 1 ? "" : "s"}` +
-    (d.erasures ? ` + ${d.erasures} unreadable` : "") + (d.mirrored ? " · mirrored" : "") + (ms != null ? ` · ${ms} ms` : "");
+  $("meta").textContent = d.meta + (ms != null ? ` · ${ms} ms` : "");
   $("result-actions").hidden = false;
   const link = $("open-link"); const isUrl = /^https?:\/\/\S+$/i.test(d.text.trim());
   link.hidden = !isUrl; if (isUrl) link.href = d.text.trim();
@@ -319,7 +363,7 @@ function showResult(found, ms) {
 function readCanvas(ctx) {
   const t = performance.now();
   const img = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-  const found = PM.readImageData(img);
+  const found = readAll(img);
   found.forEach((f) => outline(ctx, f.corners, "#17b26a"));
   showResult(found, Math.round(performance.now() - t));
 }
@@ -328,7 +372,21 @@ function readFile(file) {
   stopLive();
   $("status").textContent = "Reading…"; $("result").className = "result";
   const url = URL.createObjectURL(file), im = new Image();
-  im.onload = () => { const ctx = showImage(im, im.naturalWidth, im.naturalHeight); URL.revokeObjectURL(url); setTimeout(() => readCanvas(ctx), 20); };
+  im.onload = () => {
+    const ctx = showImage(im, im.naturalWidth, im.naturalHeight); URL.revokeObjectURL(url);
+    // decode from a copy of up to 2400 px, not from the small preview: phone
+    // photos often hold the code in only a small part of the frame
+    setTimeout(() => {
+      const t = performance.now(), k = Math.min(1, 2400 / Math.max(im.naturalWidth, im.naturalHeight));
+      const full = document.createElement("canvas");
+      full.width = Math.round(im.naturalWidth * k); full.height = Math.round(im.naturalHeight * k);
+      const fctx = full.getContext("2d", { willReadFrequently: true }); fctx.drawImage(im, 0, 0, full.width, full.height);
+      const found = readAll(fctx.getImageData(0, 0, full.width, full.height), { maxSide: 2400 });
+      const toView = ctx.canvas.width / full.width;
+      found.forEach((f) => outline(ctx, f.corners.map(([x, y]) => [x * toView, y * toView]), "#17b26a"));
+      showResult(found, Math.round(performance.now() - t));
+    }, 20);
+  };
   im.onerror = () => { $("status").textContent = "That file isn't an image this browser can open."; $("result").className = "result bad"; };
   im.src = url;
 }
@@ -347,7 +405,7 @@ function testScan() {
   if (!current) return;
   stopLive();
   const n = current.sym.modules.length, src = document.createElement("canvas");
-  src.width = src.height = (n + 4) * 12; drawSymbol(src, current.sym);
+  src.width = src.height = (n + 2 * current.quiet) * 12; drawSymbol(src, current.sym, current.quiet);
   const c = $("photo"); c.width = 640; c.height = 420; const ctx = c.getContext("2d");
   const g = ctx.createLinearGradient(0, 0, 640, 420); g.addColorStop(0, "#d9d4c8"); g.addColorStop(1, "#8f8a80");
   ctx.fillStyle = g; ctx.fillRect(0, 0, 640, 420);
@@ -383,7 +441,7 @@ $("live").onclick = async () => {
     const s = Math.min(1, 800 / Math.max(v.videoWidth, v.videoHeight));
     grab.width = Math.round(v.videoWidth * s); grab.height = Math.round(v.videoHeight * s);
     gctx.drawImage(v, 0, 0, grab.width, grab.height);
-    const found = PM.readImageData(gctx.getImageData(0, 0, grab.width, grab.height), { first: true });
+    const found = readAll(gctx.getImageData(0, 0, grab.width, grab.height), { first: true });
     if (found.length) { const ctx = showImage(grab, grab.width, grab.height); found.forEach((f) => outline(ctx, f.corners, "#17b26a")); stopLive(); showResult(found); }
   }, 350);
 };
@@ -396,7 +454,7 @@ $("copy").onclick = async () => {
 };
 
 $("text").addEventListener("input", makeCode);
-document.querySelectorAll("input[name=level]").forEach((r) => r.addEventListener("change", makeCode));
+document.querySelectorAll("input[name=level], input[name=level2], input[name=format]").forEach((r) => r.addEventListener("change", makeCode));
 document.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { $("text").value = b.dataset.ex; makeCode(); }));
 makeCode();
 testScan();

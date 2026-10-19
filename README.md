@@ -44,7 +44,30 @@ print([d.decoded.text for d in read("wifi_photo.jpg")])
 JavaScript: `PascalMDS.encode(text, level)`, `PascalMDS.readImageData(imageData)`,
 `PascalMDS.toSVG(symbol)`; see `web/index.html` for camera and file handling.
 
-## How it compares (simulated phone photos)
+## Two formats
+
+* **Standard (v1)**: a fixed-alphabet byte code (GF(257) Reed–Solomon,
+  4 error-correction levels), sizes 11×11 to 47×47, up to 174 bytes at
+  level M. Specified in `SPEC.md`.
+* **Dense (v2)**: modules read jointly from grey levels with a per-photo
+  blur model, four LDPC stages plus a Pascal GF(257) outer check, sizes
+  22×22 to 94×94, up to ~500 bytes. Prototype in `research/v2/` (Python)
+  and `web/pascal_mds_v2.js` (JS); see `research/README.md`.
+
+### Latest comparison (simulated phone photos, `bench/RESULTS_v2.md`)
+
+Smallest printed width that reads ≥ 90% of photos, QR / v1 / v2 (level A):
+
+| Payload | Sharp photo | Blurry photo |
+|---|---|---|
+| Link, 53 B | 90 / 36 / **30** px | 165 / 90 / **62** px |
+| Contact, 118 B | 110 / 62 / **44** px | 200 / 135 / **90** px |
+| Notes, 300 B | 165 / – / **75** px | 300 / – / **165** px |
+| Binary, 500 B | 165 / – / **110** px | 450 / – / **245** px |
+
+v2 needs 2.3× to 9× less printed area than QR for the same photo.
+
+## How v1 compares (simulated phone photos, first benchmark)
 
 `bench/benchmark.py` encodes the same payloads at level M as QR (segno) and as
 PASCAL-MDS, prints both at the **same symbol width**, and simulates phone

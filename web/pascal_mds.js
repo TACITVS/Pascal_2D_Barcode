@@ -295,7 +295,8 @@
     return out;
   }
   function binAdaptive(g, w, h) {
-    const mean = boxMean(g, w, h, Math.max(7, Math.floor(Math.min(w, h) / 16)));
+    // window capped at ~65 px, like zxing's block binarizer (see reader.py)
+    const mean = boxMean(g, w, h, Math.max(7, Math.min(32, Math.floor(Math.min(w, h) / 16))));
     const m = new Uint8Array(w * h); for (let i = 0; i < m.length; i++) m[i] = g[i] < mean[i] - 6 ? 1 : 0; return m;
   }
   function binOtsu(g, w, h) {
@@ -518,7 +519,7 @@
     const out = [];
     for (const g of components(mask, w, h)) {
       const bw = g.x1 - g.x0, bh = g.y1 - g.y0 + 1;
-      if (Math.max(bw, bh) > 6 * Math.min(bw, bh) || g.pixels < 0.12 * bw * bh) continue;
+      if (Math.max(bw, bh) > 6 * Math.min(bw, bh) || g.pixels < 0.03 * bw * bh) continue; // a bare L frame fills only ~5-9%
       const hull = compHull(g), quad = hullQuad(hull); if (!quad) continue;
       const ha = area(hull); if (ha <= 0 || area(quad) < 0.75 * ha) continue;
       out.push([g.pixels, quad]);
@@ -531,33 +532,76 @@
     return true;
   }
   /** Decode every symbol in a grey image (Float32Array or Uint8Array, row-major). */
+  function boxDownscale(src, w, h, f) {
+    const W = Math.round(w / f), H = Math.round(h / f), out = new Float32Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const x0 = Math.floor(x * f), x1 = Math.max(x0 + 1, Math.floor((x + 1) * f)), y0 = Math.floor(y * f), y1 = Math.max(y0 + 1, Math.floor((y + 1) * f));
+      let s = 0, c = 0; for (let yy = y0; yy < Math.min(y1, h); yy++) for (let xx = x0; xx < Math.min(x1, w); xx++) { s += src[yy * w + xx]; c++; }
+      out[y * W + x] = s / c;
+    }
+    return { g: out, W, H };
+  }
+  // Second reading: a 3 x 3 linear equalizer learned per photo by least
+  // squares from the known frame and quiet-zone ring (see reader.py).
+  function equalizedModules(S, H, n) {
+    const pad = 2, m = n + 2 * pad, v = new Float64Array(m * m), offs = [-0.18, 0, 0.18];
+    for (let r = 0; r < m; r++) for (let c = 0; c < m; c++) {
+      let acc = 0; for (const oy of offs) for (const ox of offs) acc += sampleAt(S, H, c - pad + 0.5 + ox, r - pad + 0.5 + oy);
+      v[r * m + c] = (acc / 9 - 128) / 128;
+    }
+    const known = (r, c) => { // r, c in padded coordinates
+      const rr = r - pad, cc = c - pad;
+      if (rr < 0 || cc < 0 || rr >= n || cc >= n) return 0;
+      if (rr === 0 || cc === 0 || rr === n - 1 || cc === n - 1) return frameValue(rr, cc, n);
+      return -1;
+    };
+    const feat = (r, c) => { const f = []; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) f.push(v[(r + dr) * m + c + dc]); f.push(1); return f; };
+    const A = [], b = [];
+    for (let r = 1; r < m - 1; r++) for (let c = 1; c < m - 1; c++) { const k = known(r, c); if (k >= 0) { A.push(feat(r, c)); b.push(k); } }
+    if (b.length < 40) return null;
+    const w = solve(A, b); if (!w) return null;
+    const bits = [], conf = [];
+    for (let r = 0; r < n; r++) {
+      const br = new Uint8Array(n), cr = new Float64Array(n);
+      for (let c = 0; c < n; c++) {
+        const f = feat(r + pad, c + pad); let p = 0; for (let i = 0; i < f.length; i++) p += f[i] * w[i];
+        br[c] = p > 0.5 ? 1 : 0; cr[c] = Math.min(1, Math.abs(p - 0.5) * 2);
+      }
+      bits.push(br); conf.push(cr);
+    }
+    return { bits, conf };
+  }
+  /** Decode every symbol in a grey image (Float32Array or Uint8Array, row-major).
+   * Detection runs on a pyramid (working image, then halves while the long
+   * side stays >= 320 px), skipping symbols already decoded. */
   function readGray(gray, w, h, opts = {}) {
     const maxSide = opts.maxSide || 1200;
-    let g = gray, W = w, Hh = h, scale = 1;
-    if (Math.max(w, h) > maxSide) { // box downscale
-      scale = Math.max(w, h) / maxSide; W = Math.round(w / scale); Hh = Math.round(h / scale); g = new Float32Array(W * Hh);
-      for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) {
-        const x0 = Math.floor(x * scale), x1 = Math.max(x0 + 1, Math.floor((x + 1) * scale)), y0 = Math.floor(y * scale), y1 = Math.max(y0 + 1, Math.floor((y + 1) * scale));
-        let s = 0, c = 0; for (let yy = y0; yy < Math.min(y1, h); yy++) for (let xx = x0; xx < Math.min(x1, w); xx++) { s += gray[yy * w + xx]; c++; }
-        g[y * W + x] = s / c;
+    let base = 1, g0 = gray, W0 = w, H0 = h;
+    if (Math.max(w, h) > maxSide) { base = Math.max(w, h) / maxSide; ({ g: g0, W: W0, H: H0 } = boxDownscale(gray, w, h, base)); }
+    else if (!(g0 instanceof Float32Array)) g0 = Float32Array.from(g0);
+    const found = [];
+    for (let f = 1; f <= 4; f *= 2) {
+      if (f > 1 && Math.max(W0, H0) / f < 320) break;
+      const lv = f === 1 ? { g: g0, W: W0, H: H0 } : boxDownscale(g0, W0, H0, f);
+      const S = makeSampler(lv.g, lv.W, lv.H), scale = base * f;
+      for (const bin of [binAdaptive, binOtsu]) {
+        for (const quad of candidateQuads(bin(lv.g, lv.W, lv.H), lv.W, lv.H)) {
+          const cx = quad.reduce((s, p) => s + p[0], 0) / 4 * scale, cy = quad.reduce((s, p) => s + p[1], 0) / 4 * scale;
+          if (found.some((d) => inside([cx, cy], d.corners))) continue;
+          const loc = locate(S, quad); if (!loc) continue;
+          const H = cornersH(loc.corners, loc.n); if (!H) continue;
+          const readings = [sampleModules(S, H, loc.n), equalizedModules(S, H, loc.n)].filter(Boolean);
+          let d = null;
+          for (const sm of readings) {
+            const reads = [false, true].map((m) => ({ raw: readBytes(sm.bits, m), conf: symbolConfidence(sm.conf, m), mirrored: m }));
+            d = decodeBytes(loc.n, reads); if (d) break;
+          }
+          if (d) found.push({ ...d, corners: loc.corners.map(([x, y]) => [x * scale, y * scale]) });
+          if (opts.first && found.length) return found;
+        }
       }
-    } else if (!(g instanceof Float32Array)) g = Float32Array.from(g);
-    const S = makeSampler(g, W, Hh), found = [];
-    for (const bin of [binAdaptive, binOtsu]) {
-      for (const quad of candidateQuads(bin(g, W, Hh), W, Hh)) {
-        const cx = quad.reduce((s, p) => s + p[0], 0) / 4, cy = quad.reduce((s, p) => s + p[1], 0) / 4;
-        if (found.some((f) => inside([cx, cy], f.corners))) continue;
-        const loc = locate(S, quad); if (!loc) continue;
-        const H = cornersH(loc.corners, loc.n), sm = H && sampleModules(S, H, loc.n); if (!sm) continue;
-        const reads = [false, true].map((m) => ({ raw: readBytes(sm.bits, m), conf: symbolConfidence(sm.conf, m), mirrored: m }));
-        const d = decodeBytes(loc.n, reads);
-        if (d) found.push({ ...d, corners: loc.corners });
-        if (opts.first && found.length) break;
-      }
-      // both binarisations always run (see reader.py); stop early only when asked
-      if (opts.first && found.length) break;
     }
-    return found.map((f) => ({ ...f, corners: f.corners.map(([x, y]) => [x * scale, y * scale]) }));
+    return found;
   }
   /** Decode from RGBA ImageData-like {data, width, height}. */
   function readImageData(img, opts) {
@@ -573,5 +617,11 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="${light}"/><path fill="${dark}" d="${d}"/></svg>`;
   }
 
-  return { encode, decodeModules, readGray, readImageData, toSVG, packText, unpackText, version, maxErasures, SIZES, LEVELS, pascalExtend, gaoDecode, polyEval };
+  return {
+    encode, decodeModules, readGray, readImageData, toSVG, packText, unpackText, version, maxErasures, SIZES, LEVELS,
+    pascalExtend, gaoDecode, polyEval,
+    // building blocks shared with the v2 (dense) reader in pascal_mds_v2.js
+    _internals: { binAdaptive, binOtsu, candidateQuads, locate, homography, applyH, makeSampler, solve, frameValue,
+                  boxDownscale, inside, header, bestPayload },
+  };
 });
