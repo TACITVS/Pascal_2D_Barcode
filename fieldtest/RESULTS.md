@@ -133,3 +133,93 @@ the camera, not the screen, limits the photo decides whether the stage
 rates should be rebalanced (a format change). Round 3 (`sheet.html` now)
 is that test: no code under 3 CSS px per module, white code pages, photos
 from 1 to 4 m.
+
+## 2026-10-18, round 3: distance test
+
+Eleven photos (Galaxy S26, 1× camera, HEIC) of the round-3 sheet, the
+same 15.6" screen, white code pages, cropped to the screen. Distances from
+the screen's width in the photo with the 23 mm-equivalent lens (827–832,
+501–519, 322–341 and 225–236 px wide): about 1.1, 1.7, 2.7 and 3.8 m;
+labelled by the photographer as the 1.5, 2, 3 and 4 m series. Tags name the
+width in CSS px; 1 CSS px is 1.25 screen pixels.
+
+Decoded tags, reader of this round (Dense still in the old level-A format):
+
+| Distance | Photo | QR | Standard | Dense (old A) |
+|---|---|---|---|---|
+| ~1.1 m | 205256 | b260 | a120 b260 | – |
+| | 205301 | a220 | a220 a160 b190 | b190 |
+| ~1.7 m | 205320 | – | – | a220 |
+| | 205328 | – | b260 | – |
+| | 205335 | – | a220 a160 b190 | – |
+| ~2.7 m | 205347 | – | – | – |
+| | 205358 | – | b260 | – |
+| | 205408 | – | a220 | – |
+| ~3.8 m | 3 photos | – | – | – |
+
+**Standard beat QR at every distance**: QR read only the two largest codes
+at 1.1 m and nothing beyond; Standard read 160–260 px codes at 1.7 m and
+220–260 px codes at 2.7 m.
+
+### Smallest code read, in camera pixels
+
+Each photo's scale (camera px per CSS px) from its located Dense symbols;
+rounds 2 and 3 together. Width of the code itself, without quiet zone:
+
+| | Link (55 chars) | Contact (97–104) | Notes (275–300) |
+|---|---|---|---|
+| QR | 115 | 149 | 252 |
+| Standard | **50** | **60** | does not fit |
+| Dense, old level A | 80 | 127 | 235 |
+| Dense, flat rate 0.6 (replayed, below) | 58 | 69 | ~124 |
+
+### Why old Dense lost, and the format change
+
+Measured against the true bits, the Dense soft decisions at 1.1 m held
+0.65–0.76 bit per module in stage 0, enough for its rate 0.43, but the late
+stages (rates 0.82, 0.89) failed. Two changes:
+
+1. **Reader: refit after every stage.** The model (blur, contrast, tone
+   curve, per-position noise) was fitted on the frame alone, a thin band
+   with few patterns. Refitting on the frame plus every decoded module
+   raised the late stages by up to 0.2 bit per module (e.g. stage 3 of b190
+   0.70 → 0.91). Added to the Python and JS readers (identical results on
+   all 18 photos of rounds 2–3): round 2 Dense decodes 18 → 21, round 3
+   0 → 2.
+2. **Format: flat stage rates.** Even after the refit the late stages were
+   no cleaner than stage 0 on real photos, unlike the simulated channel the
+   old rates came from. To choose new rates without new photos, the
+   reader's LLRs for all 75 located Dense sightings (rounds 2–3, with the
+   true bits standing in for decoded stages) were re-signed against the
+   all-zero codeword of IRA codes of each candidate rate and decoded
+   (valid for a symmetric channel; with the ½ and ¼ LLR-scale retries):
+
+   | Stage rates | Sightings decoded (of 75) | Side for the same data |
+   |---|---|---|
+   | old A (0.43, 0.41, 0.82, 0.89) | 22 | 1.00 |
+   | flat 0.45 | 44 | 1.19 |
+   | flat 0.5 | 42 | 1.13 |
+   | flat 0.55 | 40 | 1.08 |
+   | **flat 0.6** | **40** | **1.03** |
+   | flat 0.65 | 33 | 0.99 |
+   | flat 0.7 | 29 | 0.96 |
+
+   Flat 0.6 reads nearly twice as many sightings as the old level A at
+   about the same size. By the smallest effective width read (pitch ×
+   modules × side factor) it is within 8% of the best design on every
+   payload (link 58 vs 54 px for flat 0.7, contact the best at 69, notes 119
+   vs 110), while flat 0.65 and 0.7 lose a third on the contact card and the
+   lower rates grow the symbol more than they gain. Levels are now A = 0.6, B = 0.5, C = 0.4 in every stage. The link
+   and contact symbols keep their sizes (30 and 38 modules); the notes grow
+   from 58 to 62.
+
+Caveat: the Dense row "flat 0.6" is replayed from measured LLRs, not read
+from photos of new-format codes. Round 4 (the sheet as it is now) checks it.
+
+### Where this leaves the comparison
+
+On real photos of a screen, both PASCAL-MDS formats read codes about half
+as wide as QR needs (a quarter of the area): Standard for short data, where
+its larger modules and hard decisions do best; Dense (flat 0.6) for data
+too long for Standard, about 2× narrower than QR on the 300-character
+notes. For short data Dense is still about 15% wider than Standard.
