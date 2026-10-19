@@ -12,7 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 reader = ["numpy>=1.26", "Pillow>=10"]
 bench = ["numpy>=1.26", "Pillow>=10", "opencv-python-headless>=4.9", "segno>=1.6", "zxing-cpp>=2.2"]
-dev = ["pytest>=8", "numpy>=1.26", "Pillow>=10"]
+dev = ["pytest>=8", "numpy>=1.26", "Pillow>=10", "opencv-python-headless>=4.9", "scikit-learn>=1.4"]
 
 [project.scripts]
 pascal-mds = "pascal_mds.__main__:main"
