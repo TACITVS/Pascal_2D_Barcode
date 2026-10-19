@@ -5,8 +5,9 @@ the prime field GF(257), written and encoded in Pascal's-triangle (Newton)
 form. It is the practical implementation of the *PASCAL-MDS-257* research
 handout, revised according to the referee report of 2026-10-18.
 
-* **Smaller than QR for the same text and damage tolerance**: about half the
-  printed area including margins (table below).
+* **Reads where QR does not**: in real phone photos of a screen at 1–4 m,
+  PASCAL-MDS read codes 1.5–2.3× narrower than QR needed (2–5× less area),
+  and at distances where QR read nothing (table below).
 * **Readable from photos**: rotation, perspective, blur, uneven light,
   mirrored prints, several codes per image.
 * **Erasure-aware**: smudged or glared areas are detected from sampling
@@ -50,22 +51,44 @@ JavaScript: `PascalMDS.encode(text, level)`, `PascalMDS.readImageData(imageData)
   4 error-correction levels), sizes 11×11 to 47×47, up to 174 bytes at
   level M. Specified in `SPEC.md`.
 * **Dense (v2)**: modules read jointly from grey levels with a per-photo
-  blur model, four LDPC stages plus a Pascal GF(257) outer check, sizes
-  22×22 to 94×94, up to ~500 bytes. Prototype in `research/v2/` (Python)
-  and `web/pascal_mds_v2.js` (JS); see `research/README.md`.
+  camera model (blur, contrast, tone curve, refitted as decoding
+  proceeds), four LDPC stages at equal rates plus a Pascal GF(257) outer
+  check, sizes 22×22 to 94×94, up to 590 bytes (level A). For data too long for
+  Standard. Prototype in `research/v2/` (Python) and
+  `web/pascal_mds_v2.js` (JS); see `research/README.md`.
 
-### Latest comparison (simulated phone photos, `bench/RESULTS_v2.md`)
+### Real phone photos (`fieldtest/RESULTS.md`, rounds 3–4)
 
-Smallest printed width that reads ≥ 90% of photos, QR / v1 / v2 (level A):
+One phone (Galaxy S26, 1× camera), a 15.6" laptop screen showing
+`fieldtest/sheet.html`, photos from about 1.1 to 3.8 m. Width of the
+smallest code read, in camera pixels (smaller is better):
+
+| Payload | QR | Standard | Dense | Least area vs QR |
+|---|---|---|---|---|
+| Link, 55 chars | 107 | 48 | **47** | 5.2× less |
+| Contact card, ~100 chars | 132 | **60** | 89 | 4.8× less |
+| Notes, 275 chars | not read (missed 162) | too long | **110** | > 2.1× less |
+
+QR read nothing beyond ~1.2 m; Standard and Dense read 220 px links at
+2.75 m, and Dense read the 275-character notes at 1.75 m. Widths come in
+steps, so each figure bounds the true limit from above. Use Standard for
+short data and Dense when the data does not fit Standard.
+
+### Simulated photos (`bench/RESULTS_v2.md`)
+
+Smallest printed width read in ≥ 90% of simulated photos, camera pixels,
+QR / Standard / Dense:
 
 | Payload | Sharp photo | Blurry photo |
 |---|---|---|
-| Link, 53 B | 90 / 36 / **30** px | 165 / 90 / **62** px |
-| Contact, 118 B | 110 / 62 / **44** px | 200 / 135 / **90** px |
+| Link, 53 B | 90 / 36 / **36** px | 165 / 90 / **75** px |
+| Contact, 118 B | 110 / 62 / **52** px | 200 / 135 / **110** px |
 | Notes, 300 B | 165 / – / **75** px | 300 / – / **165** px |
 | Binary, 500 B | 165 / – / **110** px | 450 / – / **245** px |
 
-v2 needs 2.3× to 9× less printed area than QR for the same photo.
+Dense needs 2.2× to 6.3× less area than QR in simulation, in line with the
+2–5× measured on real photos. (The first Dense format scored better in
+simulation but worse on real photos; see `bench/RESULTS_v2.md`.)
 
 ## How v1 compares (simulated phone photos, first benchmark)
 
@@ -100,12 +123,12 @@ block per symbol and confidence-based erasures in the reader.
 
 * **Established**: the code and its guarantees (proofs in SPEC.md and tests);
   bit-identical Python and JavaScript implementations; the simulation results
-  above.
-* **Not established**: performance with real phones, printers and lighting.
-  The simulator and this reader were developed together, so the reader may be
-  tuned to the simulator in ways a real camera would expose. The next step is
-  a field test: print both codes at several sizes and photograph them with a
-  few phones.
+  above; four rounds of real phone photos of a laptop screen
+  (`fieldtest/RESULTS.md`), which also exposed and fixed reader and format
+  weaknesses the simulator had hidden.
+* **Not established**: other phones, printed paper, low light, motion. All
+  real-photo results so far come from one phone and one screen; Dense's
+  current format has one round of real photos.
 * **Data Matrix is nearly as compact.** On these payloads it needed 7–13% more
   area than PASCAL-MDS, at its single fixed (fairly strong) error-correction
   level. PASCAL-MDS's frame is the same idea as Data Matrix's. In this simulation

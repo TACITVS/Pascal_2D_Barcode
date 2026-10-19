@@ -38,12 +38,16 @@ from pascal_mds.layout import frame_value as v1_frame_value, is_frame as v1_is_f
 SIZES = tuple(range(22, 95, 4))
 QUIET = 4
 STAGES = [(0, 0), (1, 1), (0, 1), (1, 0)]
-# Stage code rates per level: measured stage information at the level's
-# design point (module pitch, worst blur) minus a code gap; see README.
+# Stage code rates per level.  Every stage gets the same rate.  The first
+# design (A: 0.43, 0.41, 0.82, 0.89) relied on the simulated channel, where
+# decoded neighbours make the late stages much cleaner; on real phone photos
+# they were no cleaner than stage 0.  Replaying the measured LLRs of 75
+# real symbol sightings through codes of each rate, flat 0.6 read 40 and
+# the old level A 22, for 3% more width (fieldtest/RESULTS.md, round 3).
 LEVELS = {
-    "A": {"pitch": 1.2, "blur": 0.875, "rates": (0.43, 0.41, 0.82, 0.89)},
-    "B": {"pitch": 1.5, "blur": 1.5, "rates": (0.26, 0.29, 0.63, 0.90)},
-    "C": {"pitch": 2.0, "blur": 2.5, "rates": (0.15, 0.19, 0.41, 0.82)},
+    "A": {"rates": (0.6, 0.6, 0.6, 0.6)},
+    "B": {"rates": (0.5, 0.5, 0.5, 0.5)},
+    "C": {"rates": (0.4, 0.4, 0.4, 0.4)},
 }
 RS_PARITY = 4      # parity bytes per outer block
 RS_BLOCK = 250     # max bytes per outer block

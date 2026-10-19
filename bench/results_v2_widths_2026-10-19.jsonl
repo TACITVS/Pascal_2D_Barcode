@@ -1,0 +1,60 @@
+{"system": "QR", "payload": "URL (53 B)", "blur": 0.7, "modules": 33, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.875, "75": 0.75, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "PASCAL", "payload": "URL (53 B)", "blur": 0.7, "modules": 23, "rates": {"24": 0.0, "30": 0.0, "36": 0.9375, "44": 1.0}, "min_width": 36}
+{"system": "QR", "payload": "contact (118 B)", "blur": 0.7, "modules": 45, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.875, "110": 1.0, "135": 1.0}, "min_width": 110}
+{"system": "PASCAL", "payload": "contact (118 B)", "blur": 0.7, "modules": 35, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.6875, "62": 1.0, "75": 1.0}, "min_width": 62}
+{"system": "QR", "payload": "notes (300 B)", "blur": 0.7, "modules": 65, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.8125, "165": 0.9375, "200": 1.0}, "min_width": 165}
+{"system": "PASCAL", "payload": "notes (300 B)", "blur": 0.7, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "QR", "payload": "binary (500 B)", "blur": 0.7, "modules": 85, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.9375, "200": 0.9375}, "min_width": 165}
+{"system": "PASCAL", "payload": "binary (500 B)", "blur": 0.7, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "QR", "payload": "URL (53 B)", "blur": 1.2, "modules": 33, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.625, "110": 1.0, "135": 1.0}, "min_width": 110}
+{"system": "PASCAL", "payload": "URL (53 B)", "blur": 1.2, "modules": 23, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 1.0, "62": 1.0}, "min_width": 52}
+{"system": "QR", "payload": "contact (118 B)", "blur": 1.2, "modules": 45, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 1.0, "165": 1.0}, "min_width": 135}
+{"system": "PASCAL", "payload": "contact (118 B)", "blur": 1.2, "modules": 35, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.6875, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "QR", "payload": "notes (300 B)", "blur": 1.2, "modules": 65, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0625, "200": 1.0, "245": 1.0}, "min_width": 200}
+{"system": "PASCAL", "payload": "notes (300 B)", "blur": 1.2, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "QR", "payload": "binary (500 B)", "blur": 1.2, "modules": 85, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 0.0, "245": 0.9375, "300": 1.0}, "min_width": 245}
+{"system": "PASCAL", "payload": "binary (500 B)", "blur": 1.2, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "QR", "payload": "URL (53 B)", "blur": 2.0, "modules": 33, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.25, "165": 0.9375, "200": 1.0}, "min_width": 165}
+{"system": "PASCAL", "payload": "URL (53 B)", "blur": 2.0, "modules": 23, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.125, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "QR", "payload": "contact (118 B)", "blur": 2.0, "modules": 45, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 0.9375, "245": 1.0}, "min_width": 200}
+{"system": "PASCAL", "payload": "contact (118 B)", "blur": 2.0, "modules": 35, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 1.0, "165": 1.0}, "min_width": 135}
+{"system": "QR", "payload": "notes (300 B)", "blur": 2.0, "modules": 65, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 0.0, "245": 0.0, "300": 0.9375, "370": 1.0}, "min_width": 300}
+{"system": "PASCAL", "payload": "notes (300 B)", "blur": 2.0, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "QR", "payload": "binary (500 B)", "blur": 2.0, "modules": 85, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 0.0, "245": 0.0, "300": 0.0, "370": 0.5, "450": 1.0, "550": 1.0}, "min_width": 450}
+{"system": "PASCAL", "payload": "binary (500 B)", "blur": 2.0, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-A", "payload": "URL (53 B)", "blur": 0.7, "modules": 26, "rates": {"24": 0.0, "30": 0.375, "36": 1.0, "44": 1.0}, "min_width": 36}
+{"system": "V2-B", "payload": "URL (53 B)", "blur": 0.7, "modules": 30, "rates": {"24": 0.0, "30": 0.0, "36": 0.8125, "44": 1.0, "52": 1.0}, "min_width": 44}
+{"system": "V2-C", "payload": "URL (53 B)", "blur": 0.7, "modules": 34, "rates": {"24": 0.0, "30": 0.0, "36": 0.375, "44": 1.0, "52": 1.0}, "min_width": 44}
+{"system": "V2-A", "payload": "contact (118 B)", "blur": 0.7, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.9375, "62": 1.0}, "min_width": 52}
+{"system": "V2-B", "payload": "contact (118 B)", "blur": 0.7, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 1.0, "62": 1.0}, "min_width": 52}
+{"system": "V2-C", "payload": "contact (118 B)", "blur": 0.7, "modules": 50, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.375, "62": 1.0, "75": 1.0}, "min_width": 62}
+{"system": "V2-A", "payload": "notes (300 B)", "blur": 0.7, "modules": 62, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 1.0, "90": 1.0}, "min_width": 75}
+{"system": "V2-B", "payload": "notes (300 B)", "blur": 0.7, "modules": 66, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.9375, "90": 1.0}, "min_width": 75}
+{"system": "V2-C", "payload": "notes (300 B)", "blur": 0.7, "modules": 74, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "V2-A", "payload": "binary (500 B)", "blur": 0.7, "modules": 90, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 1.0, "135": 1.0}, "min_width": 110}
+{"system": "V2-B", "payload": "binary (500 B)", "blur": 0.7, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-C", "payload": "binary (500 B)", "blur": 0.7, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-A", "payload": "URL (53 B)", "blur": 1.2, "modules": 26, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.9375, "52": 1.0}, "min_width": 44}
+{"system": "V2-B", "payload": "URL (53 B)", "blur": 1.2, "modules": 30, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 1.0, "62": 1.0}, "min_width": 52}
+{"system": "V2-C", "payload": "URL (53 B)", "blur": 1.2, "modules": 34, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.1875, "62": 1.0, "75": 1.0}, "min_width": 62}
+{"system": "V2-A", "payload": "contact (118 B)", "blur": 1.2, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.9375, "90": 1.0}, "min_width": 75}
+{"system": "V2-B", "payload": "contact (118 B)", "blur": 1.2, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.9375, "90": 1.0}, "min_width": 75}
+{"system": "V2-C", "payload": "contact (118 B)", "blur": 1.2, "modules": 50, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.5625, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "V2-A", "payload": "notes (300 B)", "blur": 1.2, "modules": 62, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 1.0, "135": 1.0}, "min_width": 110}
+{"system": "V2-B", "payload": "notes (300 B)", "blur": 1.2, "modules": 66, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 1.0, "135": 1.0}, "min_width": 110}
+{"system": "V2-C", "payload": "notes (300 B)", "blur": 1.2, "modules": 74, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.4375, "135": 1.0, "165": 1.0}, "min_width": 135}
+{"system": "V2-A", "payload": "binary (500 B)", "blur": 1.2, "modules": 90, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 1.0, "200": 1.0}, "min_width": 165}
+{"system": "V2-B", "payload": "binary (500 B)", "blur": 1.2, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-C", "payload": "binary (500 B)", "blur": 1.2, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-A", "payload": "URL (53 B)", "blur": 2.0, "modules": 26, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 1.0, "90": 1.0}, "min_width": 75}
+{"system": "V2-B", "payload": "URL (53 B)", "blur": 2.0, "modules": 30, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.9375, "90": 1.0}, "min_width": 75}
+{"system": "V2-C", "payload": "URL (53 B)", "blur": 2.0, "modules": 34, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 1.0, "110": 1.0}, "min_width": 90}
+{"system": "V2-A", "payload": "contact (118 B)", "blur": 2.0, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.625, "135": 1.0, "165": 1.0}, "min_width": 135}
+{"system": "V2-B", "payload": "contact (118 B)", "blur": 2.0, "modules": 42, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.9375, "135": 1.0}, "min_width": 110}
+{"system": "V2-C", "payload": "contact (118 B)", "blur": 2.0, "modules": 50, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.125, "135": 1.0, "165": 1.0}, "min_width": 135}
+{"system": "V2-A", "payload": "notes (300 B)", "blur": 2.0, "modules": 62, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 1.0, "200": 1.0}, "min_width": 165}
+{"system": "V2-B", "payload": "notes (300 B)", "blur": 2.0, "modules": 66, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 1.0, "200": 1.0}, "min_width": 165}
+{"system": "V2-C", "payload": "notes (300 B)", "blur": 2.0, "modules": 74, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 1.0, "245": 1.0}, "min_width": 200}
+{"system": "V2-A", "payload": "binary (500 B)", "blur": 2.0, "modules": 90, "rates": {"24": 0.0, "30": 0.0, "36": 0.0, "44": 0.0, "52": 0.0, "62": 0.0, "75": 0.0, "90": 0.0, "110": 0.0, "135": 0.0, "165": 0.0, "200": 0.0, "245": 1.0, "300": 1.0}, "min_width": 245}
+{"system": "V2-B", "payload": "binary (500 B)", "blur": 2.0, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}
+{"system": "V2-C", "payload": "binary (500 B)", "blur": 2.0, "modules": null, "rates": {}, "min_width": null, "note": "payload does not fit"}

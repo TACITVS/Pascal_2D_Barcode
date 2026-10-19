@@ -10,10 +10,10 @@
   const SIZES = []; for (let S = 22; S <= 94; S += 4) SIZES.push(S);
   const QUIET = 4, RS_PARITY = 4, RS_BLOCK = 250;
   const STAGES = [[0, 0], [1, 1], [0, 1], [1, 0]];
-  const LEVELS = {
-    A: { pitch: 1.2, blur: 0.875, rates: [0.43, 0.41, 0.82, 0.89] },
-    B: { pitch: 1.5, blur: 1.5, rates: [0.26, 0.29, 0.63, 0.90] },
-    C: { pitch: 2.0, blur: 2.5, rates: [0.15, 0.19, 0.41, 0.82] },
+  const LEVELS = { // flat stage rates measured on real photos (see research/v2/dense.py)
+    A: { rates: [0.6, 0.6, 0.6, 0.6] },
+    B: { rates: [0.5, 0.5, 0.5, 0.5] },
+    C: { rates: [0.4, 0.4, 0.4, 0.4] },
   };
   const LIGHT = 225, DARK = 25, D = LIGHT - DARK;
 
@@ -298,10 +298,14 @@
   }
   // Candidate tone curves; read tries the linear model first (see reader2.py).
   const GAMMAS = [1, 1.5, 2, 2.5, 3, 4, 5];
-  /** Tone curve, blur and contrast fitted to the frame; noise per window position (see reader2.py). */
-  function estimate(ph, gammas) {
-    const S = ph.S, rows = [];
-    for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) if (ph.knownAt(r, c) >= 0) rows.push([ph.relative(r, c), NB.map(([dr, dc]) => { const v = ph.knownAt(r + dr, c + dc); return v < 0 ? 0.5 : v; })]);
+  const MAX_FIT_MODULES = 1500; // most modules a refit samples (see reader2.py)
+  /** Tone curve, blur and contrast fitted to the known modules; noise per window position (see reader2.py).
+   *  at(r, c): 0/1 known, -1 undecided; default the frame and quiet zone. */
+  function estimate(ph, gammas, at = (r, c) => ph.knownAt(r, c)) {
+    const S = ph.S, pos = [], rows = [];
+    for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) if (at(r, c) >= 0) pos.push([r, c]);
+    const keep = pos.length > MAX_FIT_MODULES ? Array.from({ length: MAX_FIT_MODULES }, (_, i) => pos[Math.floor((i * (pos.length - 1)) / (MAX_FIT_MODULES - 1))]) : pos;
+    for (const [r, c] of keep) rows.push([ph.relative(r, c), NB.map(([dr, dc]) => { const v = at(r + dr, c + dc); return v < 0 ? 0.5 : v; })]);
     const ds = gammas.map((g) => rows.map(([rel]) => Float64Array.from(rel, (x) => 1 - x ** g)));
     const fit = (b) => { // model darkening m and unknown-neighbour variance u for every frame sample
       const fp = footprints(ph.pitch, b), ms = [], us = [];
@@ -336,15 +340,16 @@
   }
   // LLR scales tried in turn when a stage fails to decode (see reader2.py).
   const LLR_SCALES = [1, 0.5, 0.25];
-  function decodeSymbol(sampler, corners, S, mirrored, level, est) {
+  /** One hypothesis; after each stage the model is refitted on the frame plus the decoded modules (see reader2.py). */
+  function decodeSymbol(sampler, corners, S, mirrored, level, est, gammas) {
     const ph = new Photo(sampler, corners, S, mirrored); ph.kappa = est.kappa; ph.gamma = est.gamma;
-    const fp = footprints(ph.pitch, est.blur);
     const v = version(S, level), W = S + 2 * QUIET, state = Int8Array.from(ph.known); // -1 = undecided data
     const at = (r, c) => { const rr = r + QUIET, cc = c + QUIET; if (rr < 0 || cc < 0 || rr >= W || cc >= W) return 0; return state[rr * W + cc]; };
     const info = new Uint8Array(v.infoBits); let pos = 0;
-    const filters = new Map();
     const cs = codes(S, level);
     for (let k = 0; k < 4; k++) {
+      if (k) est = estimate(ph, gammas, at);
+      const fp = footprints(ph.pitch, est.blur), filters = new Map();
       const code = cs[k], { rows, cols } = cosetPositions(S, k), sc = scramble(S, level, k, rows.length), llr = new Float64Array(rows.length);
       for (let i = 0; i < rows.length; i++) {
         const r = rows[i], c = cols[i], vals = NB.map(([dr, dc]) => at(r + dr, c + dc));
@@ -393,7 +398,7 @@
         for (const gammas of [[1], GAMMAS]) {
           const est = estimate(new Photo(Smp, loc.corners, S, false), gammas);
           if (tried.has(est.gamma)) continue; tried.add(est.gamma);
-          for (const mirrored of [false, true]) { for (const lv of levels) { res = decodeSymbol(Smp, loc.corners, S, mirrored, lv, est); if (res) break; } if (res) break; }
+          for (const mirrored of [false, true]) { for (const lv of levels) { res = decodeSymbol(Smp, loc.corners, S, mirrored, lv, est, gammas); if (res) break; } if (res) break; }
           if (res) break;
         }
         if (res) found.push({ ...res, cornersLocal: loc.corners, corners: loc.corners.map(([x, y]) => [x * scale, y * scale]) });
