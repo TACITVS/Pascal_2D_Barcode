@@ -1,0 +1,283 @@
+{
+  "plan": {
+    "id": "PM257-DENSITY-VALIDATION-2026-10-19",
+    "trials_per_point": 640,
+    "seed": 900000,
+    "blur": 0.7,
+    "jitter": 0.25,
+    "noise": 6,
+    "jpeg": 75,
+    "calibration": "estimated",
+    "geometry": "supplied",
+    "rounds": 16,
+    "equalizer": "average",
+    "familywise_confidence": 0.95,
+    "source_sha256": "35496d1f89a9ebcfc17faba7dc40690db956d0bce77da38672f4d32c73ac5312",
+    "selections": [
+      [
+        128,
+        "turbo/0.55",
+        64
+      ],
+      [
+        128,
+        "turbo/0.55",
+        66
+      ],
+      [
+        128,
+        "turbo/0.55",
+        68
+      ],
+      [
+        128,
+        "standard/L",
+        76
+      ],
+      [
+        128,
+        "standard/L",
+        78
+      ],
+      [
+        128,
+        "dense/A",
+        80
+      ],
+      [
+        128,
+        "dense/A",
+        82
+      ],
+      [
+        512,
+        "turbo/0.65",
+        112
+      ],
+      [
+        512,
+        "turbo/0.65",
+        116
+      ],
+      [
+        512,
+        "dense/A",
+        128
+      ],
+      [
+        512,
+        "dense/A",
+        132
+      ]
+    ]
+  },
+  "results": [
+    {
+      "point": 0,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 64,
+      "trials": 640,
+      "successes": 632,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9692492936355644,
+        0.9964698105257074
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.25,
+      "failed_trials": [
+        164,
+        174,
+        465,
+        474,
+        495,
+        577,
+        617,
+        637
+      ],
+      "seconds": 17.525953238001875
+    },
+    {
+      "point": 1,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 66,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.23507805325987144,
+      "failed_trials": [],
+      "seconds": 13.504666511996675
+    },
+    {
+      "point": 2,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 68,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.22145328719723184,
+      "failed_trials": [],
+      "seconds": 11.930333046999749
+    },
+    {
+      "point": 3,
+      "system": "standard/L",
+      "payload_bytes": 128,
+      "width_with_quiet": 76,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.1772853185595568,
+      "failed_trials": [],
+      "seconds": 34.15872746400237
+    },
+    {
+      "point": 4,
+      "system": "standard/L",
+      "payload_bytes": 128,
+      "width_with_quiet": 78,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.168310322156476,
+      "failed_trials": [],
+      "seconds": 32.754850388002524
+    },
+    {
+      "point": 5,
+      "system": "dense/A",
+      "payload_bytes": 128,
+      "width_with_quiet": 80,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.16,
+      "failed_trials": [],
+      "seconds": 85.20575645200506
+    },
+    {
+      "point": 6,
+      "system": "dense/A",
+      "payload_bytes": 128,
+      "width_with_quiet": 82,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.1522903033908388,
+      "failed_trials": [],
+      "seconds": 84.10333303699599
+    },
+    {
+      "point": 7,
+      "system": "turbo/0.65",
+      "payload_bytes": 512,
+      "width_with_quiet": 112,
+      "trials": 640,
+      "successes": 639,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9870759247091248,
+        0.9999964448284491
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.32653061224489793,
+      "failed_trials": [
+        314
+      ],
+      "seconds": 31.30898273700268
+    },
+    {
+      "point": 8,
+      "system": "turbo/0.65",
+      "payload_bytes": 512,
+      "width_with_quiet": 116,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.30439952437574314,
+      "failed_trials": [],
+      "seconds": 24.044008695002958
+    },
+    {
+      "point": 9,
+      "system": "dense/A",
+      "payload_bytes": 512,
+      "width_with_quiet": 128,
+      "trials": 640,
+      "successes": 632,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9692492936355644,
+        0.9964698105257074
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.25,
+      "failed_trials": [
+        261,
+        284,
+        314,
+        409,
+        434,
+        560,
+        601,
+        617
+      ],
+      "seconds": 128.70109232000186
+    },
+    {
+      "point": 10,
+      "system": "dense/A",
+      "payload_bytes": 512,
+      "width_with_quiet": 132,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.990534497073787,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.23507805325987144,
+      "failed_trials": [],
+      "seconds": 119.12038812000128
+    }
+  ]
+}

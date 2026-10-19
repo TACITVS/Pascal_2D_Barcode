@@ -1,0 +1,3 @@
+# Raw discovery/validation logs are published in evidence.tar.gz.
+*.jsonl
+certificate_example.json

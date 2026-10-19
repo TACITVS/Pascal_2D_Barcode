@@ -1,0 +1,27 @@
+{
+  "id": "PM257-CAPACITY-VALIDATION-2026-10-19",
+  "trials_per_point": 640,
+  "seed": 1000000,
+  "blur": 0.7,
+  "jitter": 0.25,
+  "noise": 6,
+  "jpeg": 75,
+  "calibration": "estimated",
+  "geometry": "supplied",
+  "rounds": 16,
+  "equalizer": "average",
+  "familywise_confidence": 0.95,
+  "source_sha256": "f02203e96b1183947b4c3210230c8fea26e7cec4aac94eed92d82d449b198079",
+  "selections": [
+    [
+      800,
+      "turbo/0.85",
+      160
+    ],
+    [
+      582,
+      "dense/A",
+      160
+    ]
+  ]
+}

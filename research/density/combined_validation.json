@@ -1,0 +1,362 @@
+{
+  "familywise_confidence": 0.95,
+  "points": 13,
+  "per_tail_alpha": 0.0019230769230769232,
+  "plans": [
+    {
+      "id": "PM257-DENSITY-VALIDATION-2026-10-19",
+      "trials_per_point": 640,
+      "seed": 900000,
+      "blur": 0.7,
+      "jitter": 0.25,
+      "noise": 6,
+      "jpeg": 75,
+      "calibration": "estimated",
+      "geometry": "supplied",
+      "rounds": 16,
+      "equalizer": "average",
+      "familywise_confidence": 0.95,
+      "source_sha256": "35496d1f89a9ebcfc17faba7dc40690db956d0bce77da38672f4d32c73ac5312",
+      "selections": [
+        [
+          128,
+          "turbo/0.55",
+          64
+        ],
+        [
+          128,
+          "turbo/0.55",
+          66
+        ],
+        [
+          128,
+          "turbo/0.55",
+          68
+        ],
+        [
+          128,
+          "standard/L",
+          76
+        ],
+        [
+          128,
+          "standard/L",
+          78
+        ],
+        [
+          128,
+          "dense/A",
+          80
+        ],
+        [
+          128,
+          "dense/A",
+          82
+        ],
+        [
+          512,
+          "turbo/0.65",
+          112
+        ],
+        [
+          512,
+          "turbo/0.65",
+          116
+        ],
+        [
+          512,
+          "dense/A",
+          128
+        ],
+        [
+          512,
+          "dense/A",
+          132
+        ]
+      ]
+    },
+    {
+      "id": "PM257-CAPACITY-VALIDATION-2026-10-19",
+      "trials_per_point": 640,
+      "seed": 1000000,
+      "blur": 0.7,
+      "jitter": 0.25,
+      "noise": 6,
+      "jpeg": 75,
+      "calibration": "estimated",
+      "geometry": "supplied",
+      "rounds": 16,
+      "equalizer": "average",
+      "familywise_confidence": 0.95,
+      "source_sha256": "f02203e96b1183947b4c3210230c8fea26e7cec4aac94eed92d82d449b198079",
+      "selections": [
+        [
+          800,
+          "turbo/0.85",
+          160
+        ],
+        [
+          582,
+          "dense/A",
+          160
+        ]
+      ]
+    }
+  ],
+  "results": [
+    {
+      "point": 0,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 64,
+      "trials": 640,
+      "successes": 632,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9688432761702552,
+        0.996565263995335
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.25,
+      "failed_trials": [
+        164,
+        174,
+        465,
+        474,
+        495,
+        577,
+        617,
+        637
+      ],
+      "seconds": 17.525953238001875,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 1,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 66,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.23507805325987144,
+      "failed_trials": [],
+      "seconds": 13.504666511996675,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 2,
+      "system": "turbo/0.55",
+      "payload_bytes": 128,
+      "width_with_quiet": 68,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.22145328719723184,
+      "failed_trials": [],
+      "seconds": 11.930333046999749,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 3,
+      "system": "standard/L",
+      "payload_bytes": 128,
+      "width_with_quiet": 76,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.1772853185595568,
+      "failed_trials": [],
+      "seconds": 34.15872746400237,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 4,
+      "system": "standard/L",
+      "payload_bytes": 128,
+      "width_with_quiet": 78,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.168310322156476,
+      "failed_trials": [],
+      "seconds": 32.754850388002524,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 5,
+      "system": "dense/A",
+      "payload_bytes": 128,
+      "width_with_quiet": 80,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.16,
+      "failed_trials": [],
+      "seconds": 85.20575645200506,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 6,
+      "system": "dense/A",
+      "payload_bytes": 128,
+      "width_with_quiet": 82,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.1522903033908388,
+      "failed_trials": [],
+      "seconds": 84.10333303699599,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 7,
+      "system": "turbo/0.65",
+      "payload_bytes": 512,
+      "width_with_quiet": 112,
+      "trials": 640,
+      "successes": 639,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9867874635054954,
+        0.9999969923038832
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.32653061224489793,
+      "failed_trials": [
+        314
+      ],
+      "seconds": 31.30898273700268,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 8,
+      "system": "turbo/0.65",
+      "payload_bytes": 512,
+      "width_with_quiet": 116,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.30439952437574314,
+      "failed_trials": [],
+      "seconds": 24.044008695002958,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 9,
+      "system": "dense/A",
+      "payload_bytes": 512,
+      "width_with_quiet": 128,
+      "trials": 640,
+      "successes": 632,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9688432761702552,
+        0.996565263995335
+      ],
+      "meets_99_percent_lower_bound": false,
+      "payload_bits_per_area": 0.25,
+      "failed_trials": [
+        261,
+        284,
+        314,
+        409,
+        434,
+        560,
+        601,
+        617
+      ],
+      "seconds": 128.70109232000186,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 10,
+      "system": "dense/A",
+      "payload_bytes": 512,
+      "width_with_quiet": 132,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.23507805325987144,
+      "failed_trials": [],
+      "seconds": 119.12038812000128,
+      "experiment": "PM257-DENSITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 0,
+      "system": "turbo/0.85",
+      "payload_bytes": 800,
+      "width_with_quiet": 160,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.25,
+      "failed_trials": [],
+      "seconds": 23.53204443699542,
+      "experiment": "PM257-CAPACITY-VALIDATION-2026-10-19"
+    },
+    {
+      "point": 1,
+      "system": "dense/A",
+      "payload_bytes": 582,
+      "width_with_quiet": 160,
+      "trials": 640,
+      "successes": 640,
+      "wrong": 0,
+      "simultaneous_95_interval": [
+        0.9902759795119289,
+        1.0
+      ],
+      "meets_99_percent_lower_bound": true,
+      "payload_bits_per_area": 0.181875,
+      "failed_trials": [],
+      "seconds": 129.6827172699991,
+      "experiment": "PM257-CAPACITY-VALIDATION-2026-10-19"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "base_commit": "281db3aab62ac72255c676e03d866613bd0bfc7d",
+  "python": "3.12.14",
+  "platform": "Linux-6.18.55-x86_64-with-glibc2.39",
+  "packages": {
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "Pillow": "12.3.0",
+    "opencv-python-headless": "5.0.0.93",
+    "scikit-learn": "1.8.0",
+    "pytest": "9.1.1",
+    "matplotlib": "3.10.8"
+  },
+  "source_sha256": {
+    "research/density/archive_evidence.py": "7d0bdd9ad4368801a3986e30cc0f0369af8f2a8387e60210139657698a96b239",
+    "research/density/benchmark_density.py": "c6968efbca0c07777c77d695e22764c99dbecdb748c339f9539d610a27571159",
+    "research/density/coarse_fine.py": "49070d186373a2d724baf707037cd6e3b95d59a71c302c26c2a719021109d71c",
+    "research/density/example.py": "9ab74f0db9f14c17bee931c6ec77145e56dc771cab9aeae89ea588b5f63c4736",
+    "research/density/gray.py": "fe1043f5a37a52714cc3368541cba966bfb3f36af10270ac25b63098089bfcc8",
+    "research/density/hierarchical_probe.py": "7373df99106c40bec55593ffad85d67ba660ae45bc24f5854e39ce671694839c",
+    "research/density/make_figures.py": "68612d8b5099e7a47b38c145f5f1321605279fe2d02aea0269588a32b175c10f",
+    "research/density/ml_certificate.py": "82c399235ecbfa78389061a035cc8afc7200501b65c97fb2a69a520992a764b8",
+    "research/density/summarize.py": "a3a065d0d368f63ef2a2bce1c7d47cefa7b93b7952323b5291639261593348a0",
+    "research/density/turbo.py": "96398afe78a592bbda9d14b587fee38540195b3a426cfd00bf6d2d2a640f600a",
+    "research/density/validate.py": "71d52861b28b830a99e3f1b79c2e7cae13b46864d7b7d3b73c1acd5089def00c",
+    "research/density/validate_capacity.py": "f0ad9ccfe0559d457b3f7ddf1c55fa64ba73011a1d1c219bd2aa0ba57d0c2f76",
+    "tests/test_density_research.py": "1b28ea3b3314b1486df68264193c97ebcf5ea49eac8c592c7134ae971e1d35af",
+    "pyproject.toml": "6291f531da04bf670e0d1899c285ff0df5fae06efdbf1cf6de89dcef491a93aa"
+  },
+  "raw_log_sha256": {
+    "capacity_discovery.jsonl": "150c335a7238c306e12c327430868f64f4ce05a10132fd9ebfd46f5ac86e5fd2",
+    "capacity_validation_frames.jsonl": "a29efb34b970aac07b7a7a0ec9992465256d25277171d4ecafa546d794fbb348",
+    "cg_refinement.jsonl": "45fd6811755ac95b4765e7fbd74ac281f7d2c5b7e4fef092b7f248ddefa4a809",
+    "discovery.jsonl": "1e6ce7f167fb814925860e1a266c3b0e33db521cff30b52322d27da9459b3898",
+    "estimated_discovery.jsonl": "9b473d68650a8d73afeecb43090249090db0aaa55d74b5cd8488eae996d6a9e8",
+    "feedback_ablation.jsonl": "c5b60daedfc37ac4fdd1a26689abce9ccb8b7427fe469d9f6d40737e776e911b",
+    "gray_discovery.jsonl": "ca7ab74b95d3110702a561f1aa363e3dc7b73d4a076204e3dcf62ebd733191f9",
+    "large_discovery.jsonl": "5e1f7cbb1ed3abf113df99ef9254d8412e2be83478ef81cd54cf8de9e6bb5a1e",
+    "large_estimated_discovery.jsonl": "7a6537db563bbee46800005c4b147a38bcfae1bf40446c679992261c2a65865d",
+    "one_pass_ablation.jsonl": "b3593ae805dd3c0bc0402c9d8d3027a70f88bcc4d8eaa70b2fd9776316bd7e1c",
+    "refinement.jsonl": "14f4e97febde53bd3a726f60ad89aecb740776076ff4fceb52305eeabc904245",
+    "validation_frames.jsonl": "ac1c674cf51ea5ca04da7cdcee5fb29ffb85c608527db5829af366f00cf5bd8c"
+  },
+  "raw_log_rows": {
+    "capacity_discovery.jsonl": 4,
+    "capacity_validation_frames.jsonl": 1280,
+    "cg_refinement.jsonl": 10,
+    "discovery.jsonl": 84,
+    "estimated_discovery.jsonl": 24,
+    "feedback_ablation.jsonl": 1,
+    "gray_discovery.jsonl": 20,
+    "large_discovery.jsonl": 35,
+    "large_estimated_discovery.jsonl": 14,
+    "one_pass_ablation.jsonl": 2,
+    "refinement.jsonl": 36,
+    "validation_frames.jsonl": 7040
+  },
+  "evidence_archive_sha256": "7306af55bd1610b463197605820b63db2226fa622b527c729da4026b4db85ebc",
+  "certificate_sha256": "80abe3a3c8ceee6af73217e3f0d35f41c46591763e1fa91e3c8b32fa1007c6f0",
+  "tests": {
+    "python_passed": 377,
+    "javascript_checks_passed": 89
+  }
+}
