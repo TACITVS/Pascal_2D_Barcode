@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from . import gf257
+from .syndrome import decode_word
 from .layout import (
     LEVELS,
     SIZES,
@@ -265,14 +266,12 @@ def decode_codeword(
     """Errors-and-erasures decoding; received[i] is None for an erasure.
     Returns (codeword, errors, erasures) or None."""
     xs = [i for i, y in enumerate(received) if y is not None]
-    ys = [received[i] for i in xs]
     erasures = v.N - len(xs)
     if not acceptable(v, 0, erasures):
         return None
-    f = gf257.gao_decode(xs, ys, v.K)
-    if f is None:
+    word = decode_word(v.N, v.K, received)
+    if word is None:
         return None
-    word = [gf257.poly_eval(f, x) for x in range(v.N)]
     errors = sum(1 for x in xs if word[x] != received[x])
     if not acceptable(v, errors, erasures) or any(c > 255 for c in word):
         return None

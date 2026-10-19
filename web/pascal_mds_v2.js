@@ -192,9 +192,8 @@
     for (let p = 0; p < maxB; p++) for (let j = 0; j < blocks.length; j++) if (p < v.blocks[j]) blocks[j].push(stream[i++]);
     const message = [];
     for (const blk of blocks) {
-      const n = blk.length, k = n - RS_PARITY, xs = blk.map((_, x) => x);
-      const f = V1.gaoDecode(xs, blk, k); if (!f) return null;
-      const word = xs.map((x) => V1.polyEval(f, x));
+      const n = blk.length, k = n - RS_PARITY;
+      const word = V1.decodeWord(n, k, blk); if (!word) return null;
       if (word.filter((w, x) => w !== blk[x]).length > 1 || word.some((w) => w > 255)) return null;
       message.push(...word.slice(0, k - 1));
     }

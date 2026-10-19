@@ -1,0 +1,84 @@
+{
+  "id": "PM257-AUDIT-EVIDENCE-2026-10-19",
+  "capacity_split": [
+    {
+      "pitch": 0.6,
+      "samples_per_photo": 352836,
+      "training_photos": 1,
+      "test_photos": 1,
+      "shared_photos": 1,
+      "exposed_test_fraction": 1.0
+    },
+    {
+      "pitch": 0.8,
+      "samples_per_photo": 197136,
+      "training_photos": 1,
+      "test_photos": 1,
+      "shared_photos": 1,
+      "exposed_test_fraction": 1.0
+    },
+    {
+      "pitch": 1.0,
+      "samples_per_photo": 125316,
+      "training_photos": 1,
+      "test_photos": 2,
+      "shared_photos": 1,
+      "exposed_test_fraction": 0.1329
+    },
+    {
+      "pitch": 1.2,
+      "samples_per_photo": 86436,
+      "training_photos": 2,
+      "test_photos": 1,
+      "shared_photos": 1,
+      "exposed_test_fraction": 1.0
+    },
+    {
+      "pitch": 1.5,
+      "samples_per_photo": 54756,
+      "training_photos": 3,
+      "test_photos": 1,
+      "shared_photos": 1,
+      "exposed_test_fraction": 1.0
+    },
+    {
+      "pitch": 2.0,
+      "samples_per_photo": 30276,
+      "training_photos": 4,
+      "test_photos": 3,
+      "shared_photos": 1,
+      "exposed_test_fraction": 0.0276
+    },
+    {
+      "pitch": 2.5,
+      "samples_per_photo": 19044,
+      "training_photos": 7,
+      "test_photos": 3,
+      "shared_photos": 1,
+      "exposed_test_fraction": 0.3327
+    }
+  ],
+  "byte_bound": {
+    "generic_byte_bound_max": 2.0863693118677266e-10,
+    "worst_case": [
+      47,
+      "L",
+      2,
+      28
+    ],
+    "accepted_configurations_above_target": 47,
+    "interpretation": "A looser upper bound, not a measured violation or lower bound."
+  },
+  "wilson_15_of_16": [
+    0.7167126242970108,
+    0.9888806552353575
+  ],
+  "pad_rank_bits": {
+    "4": 7,
+    "18": 7,
+    "42": 7,
+    "76": 7,
+    "152": 6,
+    "255": 0
+  }
+}

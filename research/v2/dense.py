@@ -32,6 +32,7 @@ sys.path.insert(0, str(ROOT / "research"))
 
 from ldpc import Decoder, IRACode, encode as ldpc_encode  # noqa: E402
 from pascal_mds import gf257  # noqa: E402
+from pascal_mds.syndrome import decode_word  # noqa: E402
 from pascal_mds.codec import _choose_pad, _header, _parse_header, best_payload, unpack_text  # noqa: E402
 from pascal_mds.layout import frame_value as v1_frame_value, is_frame as v1_is_frame  # noqa: E402
 
@@ -221,10 +222,9 @@ def decode_info_bits(v: Version, bits: np.ndarray) -> bytes | None:
     message = []
     for blk in blocks:
         n, k = len(blk), len(blk) - RS_PARITY
-        f = gf257.gao_decode(list(range(n)), blk, k)
-        if f is None:
+        word = decode_word(n, k, blk)
+        if word is None:
             return None
-        word = [gf257.poly_eval(f, x) for x in range(n)]
         if sum(a != b for a, b in zip(word, blk)) > 1 or any(c > 255 for c in word):
             return None
         message += word[:k - 1]

@@ -81,6 +81,85 @@
     return f;
   }
 
+  // PM257-SYN-JS-2026-10-19: dual GRS syndromes / BM / Forney.
+  // Same code and acceptance policy; bounded cache of punctured check matrices.
+  const checkCache = new Map();
+  function syndromeChecks(length, k, kept) {
+    const key = length + "/" + k + "/" + kept.join(",");
+    if (checkCache.has(key)) return checkCache.get(key);
+    const factorial = [1], present = new Set(kept), erased = [];
+    for (let i = 1; i < length; i++) factorial.push(factorial[i - 1] * i % P);
+    for (let i = 0; i < length; i++) if (!present.has(i)) erased.push(i);
+    const weights = kept.map((i) => {
+      let w = INV[factorial[i] * factorial[length - 1 - i] % P];
+      if ((length - 1 - i) % 2) w = mod(-w);
+      for (const j of erased) w = mod(w * (i - j));
+      return w;
+    });
+    let row = weights.slice(); const checks = [];
+    for (let j = 0; j < kept.length - k; j++) {
+      checks.push(row); row = row.map((w, i) => w * (kept[i] + 1) % P);
+    }
+    const out = { weights, checks, erased };
+    if (checkCache.size >= 32) checkCache.delete(checkCache.keys().next().value);
+    checkCache.set(key, out); return out;
+  }
+  function syndromeLocator(s) {
+    let cur = [1], prev = [1], degree = 0, shift = 1, last = 1;
+    for (let n = 0; n < s.length; n++) {
+      let d = s[n];
+      for (let j = 1; j <= degree; j++) d += cur[j] * s[n - j];
+      d = mod(d);
+      if (!d) { shift++; continue; }
+      const before = cur.slice(), factor = d * INV[last] % P;
+      while (cur.length < prev.length + shift) cur.push(0);
+      for (let j = 0; j < prev.length; j++) cur[j + shift] = mod(cur[j + shift] - factor * prev[j]);
+      if (2 * degree <= n) { degree = n + 1 - degree; prev = before; last = d; shift = 1; }
+      else shift++;
+    }
+    return cur.slice(0, degree + 1);
+  }
+  function decodeWord(length, k, received) {
+    if (!Number.isInteger(length) || !Number.isInteger(k) || k < 1 || length > 256 || k > length || received.length !== length)
+      throw new Error("invalid RS dimensions");
+    const kept = [], values = [];
+    for (let i = 0; i < length; i++) if (received[i] !== null) {
+      const y = received[i];
+      if (!Number.isInteger(y) || y < 0 || y >= P) throw new Error("received symbol outside GF(257)");
+      kept.push(i); values.push(y);
+    }
+    if (kept.length < k) return null;
+    const { weights, checks, erased } = syndromeChecks(length, k, kept);
+    const s = checks.map((row) => { let v = 0; for (let j = 0; j < values.length; j++) v += row[j] * values[j]; return v % P; });
+    if (s.some((v) => v !== 0)) {
+      const loc = syndromeLocator(s), degree = loc.length - 1;
+      if (!degree || 2 * degree > s.length) return null;
+      const positions = [];
+      for (let j = 0; j < kept.length; j++) if (!polyEval(loc, INV[kept[j] + 1])) positions.push(j);
+      if (positions.length !== degree) return null;
+      const omega = [], derivative = loc.slice(1).map((v, j) => (j + 1) * v % P);
+      for (let n = 0; n < degree; n++) { let v = 0; for (let j = 0; j <= n; j++) v += loc[j] * s[n - j]; omega.push(v % P); }
+      const predicted = new Array(s.length).fill(0);
+      for (const j of positions) {
+        const a = kept[j] + 1, root = INV[a], denom = polyEval(derivative, root);
+        if (!denom) return null;
+        const amp = mod(-a * polyEval(omega, root) * INV[denom]);
+        values[j] = mod(values[j] - amp * INV[weights[j]]);
+        let term = amp;
+        for (let n = 0; n < predicted.length; n++) { predicted[n] = (predicted[n] + term) % P; term = term * a % P; }
+      }
+      if (predicted.some((v, j) => v !== s[j])) return null;
+    }
+    const word = new Array(length).fill(0);
+    for (let j = 0; j < kept.length; j++) word[kept[j]] = values[j];
+    for (const x of erased) {
+      let product = 1, total = 0;
+      for (let j = 0; j < kept.length; j++) { const d = mod(x - kept[j]); product = product * d % P; total += values[j] * weights[j] * INV[d]; }
+      word[x] = product * (total % P) % P;
+    }
+    return word;
+  }
+
   // ------------------------------------------------------------ layout
   const SIZES = []; for (let n = 11; n <= 47; n += 2) SIZES.push(n);
   const LEVELS = "LMQH";
@@ -234,12 +313,11 @@
     return out;
   }
   function decodeCodeword(v, received) {
-    const xs = [], ys = [];
-    received.forEach((y, i) => { if (y !== null) { xs.push(i); ys.push(y); } });
+    const xs = [];
+    received.forEach((y, i) => { if (y !== null) xs.push(i); });
     const erasures = v.N - xs.length;
     if (!acceptable(v, 0, erasures)) return null;
-    const f = gaoDecode(xs, ys, v.K); if (!f) return null;
-    const word = []; for (let x = 0; x < v.N; x++) word.push(polyEval(f, x));
+    const word = decodeWord(v.N, v.K, received); if (!word) return null;
     let errors = 0; for (const x of xs) if (word[x] !== received[x]) errors++;
     if (!acceptable(v, errors, erasures) || word.some((c) => c > 255)) return null;
     return { word, errors, erasures };
@@ -619,7 +697,7 @@
 
   return {
     encode, decodeModules, readGray, readImageData, toSVG, packText, unpackText, version, maxErasures, SIZES, LEVELS,
-    pascalExtend, gaoDecode, polyEval,
+    pascalExtend, gaoDecode, polyEval, decodeWord,
     // building blocks shared with the v2 (dense) reader in pascal_mds_v2.js
     _internals: { binAdaptive, binOtsu, candidateQuads, locate, homography, applyH, makeSampler, solve, frameValue,
                   boxDownscale, inside, header, bestPayload },
