@@ -223,3 +223,50 @@ as wide as QR needs (a quarter of the area): Standard for short data, where
 its larger modules and hard decisions do best; Dense (flat 0.6) for data
 too long for Standard, about 2× narrower than QR on the 300-character
 notes. For short data Dense is still about 15% wider than Standard.
+
+## 2026-10-18, round 4: the flat-rate Dense format
+
+Thirteen photos, same phone, screen and procedure as round 3, of the sheet
+with Dense codes in the new format (level A = rate 0.6 in every stage).
+Full screen; the sheet packed into three pages (9, 19 and 2 codes; page
+contents reproduced in a browser to know which codes each photo showed).
+Distances from the screen's width in the photo (706–733, 491–511, 315–321,
+233–239 px): about 1.2, 1.75, 2.75 and 3.7 m.
+
+| Distance | Page | QR | Standard | Dense |
+|---|---|---|---|---|
+| ~1.2 m | 1 | b260 | a120 b260 | a220 b260 c260 c320 |
+| | 2 | a220 | a220 a160 b190 | a160 b190 |
+| | 3 | – | a100 | (not on page) |
+| ~1.75 m | 1 | – | b260 | a220 b260 c320 |
+| | 2 | – | a220 a160 | – |
+| | 3 | – | – | |
+| ~2.75 m | 4 photos | – | a220 | a220 |
+| ~3.7 m | 3 photos | – | – | – |
+
+The 275-character notes: **QR missed even its 320 px code at 1.2 m; Dense
+read 260 px at 1.2 m and 320 px at 1.75 m.** QR read nothing beyond 1.2 m.
+
+Smallest code read, in camera pixels (scale from each photo's Dense
+symbols; widths come in steps, so each figure bounds the true limit from
+above):
+
+| | Link (55 chars) | Contact (97–104) | Notes (275) |
+|---|---|---|---|
+| QR | 107 | 132 | none (missed at 162) |
+| Standard | 48 | 89 | does not fit |
+| **Dense, flat 0.6** | **47** | **89** | **110** |
+| Dense, replay prediction (round 3) | 58 | 69 | ~124 |
+
+Dense read down to 1.6–1.8 camera px per module with 15–18% of module
+centres wrong on their own (c320 at 1.77 px, a220 at 1.57 px): the soft,
+model-based detection doing what it was built for. With round 3, Standard's
+best contact read was 60 px (at 2.7 m), so for short data the two formats
+are now about even; for long data only Dense reads, at less than half the
+width QR needs (QR's notes: 252 px in round 2, missed at 162 px here).
+
+**Summary of rounds 3–4 (one phone, one laptop screen, 1–4 m):** PASCAL-MDS
+reads codes 2.2–2.3× narrower than QR for links, ~1.5× for the contact
+card (QR's limit lies between two steps) and 1.5–2.3× for 275-character
+notes (QR missed 162 px here and first read 252 px in round 2), i.e. 2–5×
+less area, and was read at distances where QR read nothing.

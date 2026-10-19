@@ -198,23 +198,18 @@ td.win { color: var(--ok); font-weight: 700; }
   </div>
 
   <section class="bench" aria-labelledby="bench-h">
-    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Simulated phone photos · 16 per size</span></div>
+    <div class="panel-head"><h2 id="bench-h">Measured against QR</h2><span class="eyebrow">Real phone photos · laptop screen · 1–4 m</span></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Payload</th><th>Photo</th><th>QR Code</th><th>Standard</th><th>Dense v2</th><th>Dense vs QR area</th></tr></thead>
+        <thead><tr><th>Payload</th><th>QR Code</th><th>Standard</th><th>Dense v2</th><th>Least area vs QR</th></tr></thead>
         <tbody>
-          <tr><td>Link, 53 B</td><td>sharp</td><td class="num">90 px</td><td class="num">36 px</td><td class="num"><b>30 px</b></td><td class="num win">9.0× less</td></tr>
-          <tr><td></td><td>blurry</td><td class="num">165 px</td><td class="num">90 px</td><td class="num"><b>62 px</b></td><td class="num win">7.1× less</td></tr>
-          <tr><td>Contact card, 118 B</td><td>sharp</td><td class="num">110 px</td><td class="num">62 px</td><td class="num"><b>44 px</b></td><td class="num win">6.3× less</td></tr>
-          <tr><td></td><td>blurry</td><td class="num">200 px</td><td class="num">135 px</td><td class="num"><b>90 px</b></td><td class="num win">4.9× less</td></tr>
-          <tr><td>Notes, 300 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>75 px</b></td><td class="num win">4.8× less</td></tr>
-          <tr><td></td><td>blurry</td><td class="num">300 px</td><td class="num">–</td><td class="num"><b>165 px</b></td><td class="num win">3.3× less</td></tr>
-          <tr><td>Binary, 500 B</td><td>sharp</td><td class="num">165 px</td><td class="num">–</td><td class="num"><b>110 px</b></td><td class="num win">2.3× less</td></tr>
-          <tr><td></td><td>blurry</td><td class="num">450 px</td><td class="num">–</td><td class="num"><b>245 px</b></td><td class="num win">3.4× less</td></tr>
+          <tr><td>Link, 55 chars</td><td class="num">107 px</td><td class="num">48 px</td><td class="num"><b>47 px</b></td><td class="num win">5.2× less</td></tr>
+          <tr><td>Contact card, ~100 chars</td><td class="num">132 px</td><td class="num"><b>60 px</b></td><td class="num">89 px</td><td class="num win">4.8× less</td></tr>
+          <tr><td>Notes, 275 chars</td><td class="num">not read</td><td class="num">–</td><td class="num"><b>110 px</b></td><td class="num win">&gt; 2.1× less</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="foot">Smallest printed symbol width, in camera pixels, at which at least 90% of simulated phone photos decode (rotation, perspective, lens blur 0.7 px sharp or 2.0 px blurry, noise, JPEG, uneven light). QR level M read by zxing-cpp, the engine behind many phone scanners; Standard level M; Dense level A. "–": too long for Standard. In real phone photos of a screen, Standard read 47 codes where QR read 31; Dense is in its first real-photo round. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
+    <p class="foot">Width of the smallest code each format read, in camera pixels, in photos of a laptop screen taken with one phone (Galaxy S26, 1× camera) from about 1.1 to 3.8 m. QR level M read by zxing-cpp, the engine behind many phone scanners; Standard level M; Dense level A. QR read nothing beyond about 1.2 m and missed the notes even at 162 px; Standard and Dense read links at 2.75 m. "–": too long for Standard. Details in fieldtest/RESULTS.md. Today's phone cameras read QR natively; PASCAL-MDS needs this page or the open-source reader.</p>
   </section>
 </div>
 
