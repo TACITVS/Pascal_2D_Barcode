@@ -1,0 +1,54 @@
+name: Registered reliable density discovery
+
+on:
+  pull_request:
+    paths:
+      - "research/density/soft_outer.py"
+      - "research/density/test_soft_outer.py"
+      - "research/density/reliable_density.py"
+      - "research/density/test_reliable_density.py"
+      - ".github/workflows/reliable-density.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - payload: 128
+            widths: "48,56,64,72,80,96"
+            profiles: "turbo/0.55,turbo/0.65,turbo/0.85,qr/L,qr/M,datamatrix/ECC200"
+          - payload: 800
+            widths: "128,144,160,176,192,224"
+            profiles: "turbo/0.85,qr/L,qr/M,datamatrix/ECC200"
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install experiment dependencies
+        run: python -m pip install -e ".[dev,bench]" "zxing-cpp>=3,<4"
+      - name: Decoder and comparison checks
+        run: python -m pytest research/density/test_soft_outer.py research/density/test_reliable_density.py -q
+      - name: Run paired discovery trials
+        run: >-
+          python research/density/reliable_density.py
+          --payload ${{ matrix.payload }}
+          --widths "${{ matrix.widths }}"
+          --profiles "${{ matrix.profiles }}"
+          --trials 16 --seed 20261020
+          --out results/reliable-${{ matrix.payload }}.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: registered-density-${{ matrix.payload }}
+          path: results/
