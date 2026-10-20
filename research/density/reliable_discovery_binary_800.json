@@ -1,0 +1,477 @@
+{
+  "config": {
+    "experiment": "PB-RELIABLE-2026-10-20-v1",
+    "payload_bytes": 800,
+    "widths": [
+      128,
+      144,
+      160,
+      176,
+      192,
+      224
+    ],
+    "profiles": [
+      "turbo/0.85",
+      "qr/L",
+      "qr/M",
+      "datamatrix/ECC200"
+    ],
+    "trials": 16,
+    "seed": 20261020,
+    "rounds": 16,
+    "blur": 0.7,
+    "noise": 6,
+    "jpeg": 75,
+    "blur_jitter": 0.25,
+    "source_sha256": {
+      "reliable_density.py": "c896f6c44a182b5611a44da8001fd2d6ccbbdcb0b850e65a050c4a77f94ae816",
+      "soft_outer.py": "27393a9f03fd65f8503f404402d4692c0ac4489e8f582e13633ff6123d270fdf",
+      "turbo.py": "96398afe78a592bbda9d14b587fee38540195b3a426cfd00bf6d2d2a640f600a"
+    },
+    "geometry": "oracle_registered_axis_aligned",
+    "blur_supplied": "actual_oracle",
+    "endpoints": [
+      25,
+      225
+    ],
+    "common_integrity_bytes": 8,
+    "compression": "common_raw_random_bytes",
+    "area_includes_native_quiet_zones": true,
+    "photographic_validation": false,
+    "python": "3.12.15",
+    "packages": {
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "opencv-python-headless": "5.0.0.93",
+      "segno": "1.6.6",
+      "zxing-cpp": "3.1.1"
+    }
+  },
+  "results": [
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 128,
+      "trials": 16,
+      "successes": 9,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.1623910287500001,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 128,
+      "trials": 16,
+      "successes": 9,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.1623910287500001,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 144,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008483943687501494,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 144,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008483943687501494,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 160,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008089637749998158,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 160,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008089637749998158,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 176,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008428234249999278,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 176,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008428234249999278,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 192,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008500968750000393,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 192,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008500968750000393,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 224,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.009034177062499094,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 224,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.009034177062499094,
+      "symbol_shape": [
+        94,
+        94
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 128,
+      "trials": 16,
+      "successes": 1,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0073846735624987225,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 144,
+      "trials": 16,
+      "successes": 10,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.006775901937500883,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 160,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.006299490625000459,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 176,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.005989858312500651,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 192,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004101336562500002,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 224,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0009020101875001352,
+      "symbol_shape": [
+        97,
+        97
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 128,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008248734749998654,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 144,
+      "trials": 16,
+      "successes": 2,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.009141760687498834,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 160,
+      "trials": 16,
+      "successes": 13,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.008719608687500102,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 176,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.007739683437501199,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 192,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.006710453750000678,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 224,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.00401056981249992,
+      "symbol_shape": [
+        109,
+        109
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 128,
+      "trials": 16,
+      "successes": 1,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0070641248750007435,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 144,
+      "trials": 16,
+      "successes": 6,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.007064974749999564,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 160,
+      "trials": 16,
+      "successes": 14,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.006460854437501329,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 176,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0065098916249994865,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 192,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.00570954124999945,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 224,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003509235500000596,
+      "symbol_shape": [
+        104,
+        104
+      ],
+      "quiet": 1
+    }
+  ],
+  "provenance": {
+    "commit": "6bdb2aa01968d61f7227f670d89765f0e8f905e5",
+    "workflow_run": 39472316991,
+    "job_id": 118799250564
+  }
+}

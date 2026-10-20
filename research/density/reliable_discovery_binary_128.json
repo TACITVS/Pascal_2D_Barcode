@@ -1,0 +1,815 @@
+{
+  "config": {
+    "experiment": "PB-RELIABLE-2026-10-20-v1",
+    "payload_bytes": 128,
+    "widths": [
+      48,
+      56,
+      64,
+      72,
+      80,
+      96
+    ],
+    "profiles": [
+      "turbo/0.55",
+      "turbo/0.65",
+      "turbo/0.85",
+      "qr/L",
+      "qr/M",
+      "datamatrix/ECC200"
+    ],
+    "trials": 16,
+    "seed": 20261020,
+    "rounds": 16,
+    "blur": 0.7,
+    "noise": 6,
+    "jpeg": 75,
+    "blur_jitter": 0.25,
+    "source_sha256": {
+      "reliable_density.py": "c896f6c44a182b5611a44da8001fd2d6ccbbdcb0b850e65a050c4a77f94ae816",
+      "soft_outer.py": "27393a9f03fd65f8503f404402d4692c0ac4489e8f582e13633ff6123d270fdf",
+      "turbo.py": "96398afe78a592bbda9d14b587fee38540195b3a426cfd00bf6d2d2a640f600a"
+    },
+    "geometry": "oracle_registered_axis_aligned",
+    "blur_supplied": "actual_oracle",
+    "endpoints": [
+      25,
+      225
+    ],
+    "common_integrity_bytes": 8,
+    "compression": "common_raw_random_bytes",
+    "area_includes_native_quiet_zones": true,
+    "photographic_validation": false,
+    "python": "3.12.15",
+    "packages": {
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "opencv-python-headless": "5.0.0.93",
+      "segno": "1.6.6",
+      "zxing-cpp": "3.1.1"
+    }
+  },
+  "results": [
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.24532260781250237,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.24532260781250237,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 3,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.22159566243749929,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 3,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.22159566243749929,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.022003267812502614,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.022003267812502614,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004955777812502227,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004955777812502227,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004129759500001384,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004129759500001384,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "legacy",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004289393749995263,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.55",
+      "receiver": "gmd",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004289393749995263,
+      "symbol_shape": [
+        50,
+        50
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.21033819318750258,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.21033819318750258,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 3,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.1877063179374998,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 3,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.1877063179374998,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 15,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.024601515812496366,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 15,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.024601515812496366,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003945668687497239,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003945668687497239,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003784338875001403,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003784338875001403,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "legacy",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003891241749998109,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.65",
+      "receiver": "gmd",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003891241749998109,
+      "symbol_shape": [
+        46,
+        46
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.17948436200000106,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.17948436200000106,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 1,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.17238705262499643,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 1,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.17238705262499643,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 15,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.028284710437501914,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 15,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.028284710437501914,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0035197306249976634,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0035197306249976634,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003517747624996126,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003517747624996126,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "legacy",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003582147249999501,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "turbo/0.85",
+      "receiver": "gmd",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003582147249999501,
+      "symbol_shape": [
+        42,
+        42
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003649065937495699,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003707772812497012,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004175162562498613,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 11,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0033981081875040786,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003347169874997391,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/L",
+      "receiver": "assisted",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0019162524375015977,
+      "symbol_shape": [
+        45,
+        45
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0038380416249950144,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003987581937498597,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004473873937501871,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 5,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.004297517750003976,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 15,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003494609187502107,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "qr/M",
+      "receiver": "assisted",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0022389792500003836,
+      "symbol_shape": [
+        49,
+        49
+      ],
+      "quiet": 4
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 48,
+      "trials": 16,
+      "successes": 0,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0034671892499966717,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 56,
+      "trials": 16,
+      "successes": 1,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0035784938750049733,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 64,
+      "trials": 16,
+      "successes": 10,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.003141451375005211,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 72,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.002741085062494264,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 80,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.0027028166249998264,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    },
+    {
+      "profile": "datamatrix/ECC200",
+      "receiver": "assisted",
+      "allocated_width": 96,
+      "trials": 16,
+      "successes": 16,
+      "accepted_wrong": 0,
+      "mean_decode_seconds": 0.001076931937503467,
+      "symbol_shape": [
+        44,
+        44
+      ],
+      "quiet": 1
+    }
+  ],
+  "provenance": {
+    "commit": "6bdb2aa01968d61f7227f670d89765f0e8f905e5",
+    "workflow_run": 39472316991,
+    "job_id": 118799250239
+  }
+}
