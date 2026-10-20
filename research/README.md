@@ -3,6 +3,13 @@
 Goal of the project: a 2D code that carries far more data per printed area
 than QR Code, spending the computing power of current phones on decoding.
 
+The [2026-10-19 density study](density/README.md) adds a different global
+optical-code format, complete arbitrary-payload comparisons, 8,320 held-out
+simulated captures, scoped mathematical proofs, and an integer-verifiable ML
+witness. Its confidence criterion and overhead accounting differ from the
+early exploratory information-rate figures below; the numbers are not directly
+interchangeable. Real print/phone validation is still required.
+
 QR's density is not a law of nature. The hard limit for any code is the
 information capacity of the print-to-camera channel (blur, noise,
 compression, resolution). QR (1994) uses that channel conservatively:

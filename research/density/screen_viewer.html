@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pascal barcode · screen photograph test</title>
+<meta name="application-name" content="PM257-PHOTO-VIEWER-2026-10-19-v1.1">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#183138;font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+header{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #dce6e8}
+h1{font-size:17px;margin:0}button,select,input{font:inherit;border-radius:8px;border:1px solid #bdced2;background:#fff;color:inherit;padding:9px 11px}
+button{cursor:pointer}button:hover{background:#eaf3f2}button:disabled{cursor:not-allowed;color:#7c8c90;background:#edf1f2;border-color:#d7e0e2}button.primary{background:#146f66;color:#fff;border-color:#146f66}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #66bab0;outline-offset:2px}
+.app{height:calc(100dvh - 54px);display:grid;grid-template-columns:292px 1fr}aside{background:#f3f7f7;border-right:1px solid #dce6e8;padding:20px;overflow:auto}
+label{display:block;margin:14px 0 6px;font-weight:650;font-size:12px}select,input{width:100%}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.muted{color:#566d73;font-size:12px;line-height:1.55}.badge{display:inline-block;background:#dceeea;border-radius:16px;padding:4px 9px;font-size:11px;font-weight:700}
+main{min-width:0;min-height:0;padding:12px 16px;display:flex;flex-direction:column;text-align:center}.caption{flex:none;line-height:1.5}h2{font-size:21px;margin:0 0 2px}.canvas-wrap{flex:1;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;overflow:auto}canvas{display:block;flex:none;image-rendering:pixelated;image-rendering:crisp-edges}.status{min-height:38px;flex:none;font-size:12px;line-height:1.5;color:#526a71;padding-top:5px}.error{color:#9a3b18}details{margin-top:16px}summary{cursor:pointer;font-weight:650}a{color:#126b63}.buttons{display:grid;gap:8px;margin-top:12px}
+@media(max-width:760px){.app{grid-template-columns:220px 1fr}aside{padding:12px}header{padding:0 12px}h1{font-size:14px}main{padding:8px}.muted{font-size:11px}}
+</style>
+</head>
+<body>
+<header><h1>Pascal barcode · photograph test</h1><button id="fullscreen">Full screen</button></header>
+<div class="app">
+<aside>
+<span class="badge">Offline test kit · v1.1</span>
+<label for="profile">Comparison target</label>
+<select id="profile"><option value="A1">A1 · Existing Dense · 128 bytes</option><option value="A2">A2 · New optical code · 128 bytes</option><option value="B1">B1 · Existing Dense · 582 bytes</option><option value="B2">B2 · New optical code · 800 bytes</option></select>
+<div class="row" style="margin-top:8px"><button id="previous">← Previous</button><button id="next">Next →</button></div>
+<div class="muted" id="navigation" role="status" aria-live="polite"></div>
+<label for="variant">Payload set</label><select id="variant"><option value="1">V1 · initial camera test</option><option value="2">V2 · reserved confirmation</option><option value="3">V3 · reserved confirmation</option></select>
+<p class="muted" id="comparison"></p>
+<div class="row"><div><label for="distance">Distance · metres</label><input id="distance" type="number" min="0.1" step="0.5" value="0.5"></div><div><label for="repeat">Shot number</label><input id="repeat" type="number" min="1" step="1" value="1"></div></div>
+<label for="cells">Physical screen pixels per module</label><input id="cells" type="range" min="4" max="12" step="1" value="4">
+<div class="muted" id="dimensions"></div>
+<label for="measured">Measured code width incl. white margin · mm</label><input id="measured" type="number" min="1" step="0.1" placeholder="Optional: measure with a ruler">
+<div class="buttons"><button class="primary" id="record">Record this shot → next number</button><button id="log">Save capture log</button><button id="png">Save current target PNG</button></div>
+<p class="muted" id="logcount">No shots recorded.</p>
+<details><summary>Quick instructions</summary><p class="muted">Use a desktop browser at 100% zoom. Keep screen brightness fixed. Start with V1 and 0.5 m. Photograph all four targets before the distance sweep.</p><p class="muted">Phone: normal Photo mode, 1× camera, fixed resolution, flash off. Keep all four corner markers visible. Upload the original HEIC/JPEG files.</p><p class="muted">Compare A1/A2 at the same target size, then B1/B2 at the same size. Arrow keys change target; number keys 1–4 select directly.</p><p class="muted">This page displays precomputed barcodes. It does not decode camera photos. Corner markers assist measurement and registration; they are outside the barcode's area.</p></details>
+</aside>
+<main>
+<div class="caption"><h2 id="title"></h2><div id="shot"></div></div>
+<div class="canvas-wrap" id="viewport"><canvas id="target" aria-label="Barcode and four registration markers"></canvas></div>
+<div class="status" id="status"></div>
+</main>
+</div>
+<script id="manifest" type="application/json">__TARGET_MANIFEST__</script>
+<script>
+/* PM257-PHOTO-UI-2026-10-19-v1.1. Navigation stops at both ends. */
+(() => {
+"use strict";
+class TargetBoard {
+  constructor(canvas, manifest) { this.canvas=canvas; this.manifest=manifest; }
+  align(dpr) {
+    this.canvas.style.transform="none";
+    const r=this.canvas.getBoundingClientRect();
+    this.canvas.style.transform=`translate(${(Math.round(r.left*dpr)-r.left*dpr)/dpr}px,${(Math.round(r.top*dpr)-r.top*dpr)/dpr}px)`;
+  }
+  draw(caseData, pixels, dpr) {
+    const side=caseData.board_side_units, origin=caseData.code_origin_units, q=caseData.quiet;
+    this.canvas.width=side*pixels; this.canvas.height=side*pixels;
+    this.canvas.style.width=`${side*pixels/dpr}px`; this.canvas.style.height=`${side*pixels/dpr}px`;
+    const ctx=this.canvas.getContext("2d"); ctx.imageSmoothingEnabled=false;
+    ctx.fillStyle="#fff";ctx.fillRect(0,0,this.canvas.width,this.canvas.height);ctx.fillStyle="#000";
+    caseData.rows.forEach((row,y)=>{for(let x=0;x<row.length;x++)if(row[x]==="1")ctx.fillRect((origin+q+x)*pixels,(origin+q+y)*pixels,pixels,pixels);});
+    caseData.marker_ids.forEach((id,index)=>{
+      const [x0,y0]=caseData.marker_corners_units[index][0], unit=caseData.marker_side_units/6;
+      this.manifest.markers[String(id)].forEach((row,y)=>row.forEach((v,x)=>{if(v)ctx.fillRect((x0+x*unit)*pixels,(y0+y*unit)*pixels,unit*pixels,unit*pixels);}));
+    });
+    // Small guide ticks lie outside the complete quiet zone.
+    ctx.fillStyle="#8eabad";
+    const a=origin*pixels,b=(origin+caseData.S+2*q)*pixels,t=Math.max(1,Math.round(dpr));
+    for(const x of [a,b]){ctx.fillRect(x-t/2,a-2*pixels,t,pixels);ctx.fillRect(x-t/2,b+pixels,t,pixels);}
+  }
+}
+class PhotoSession {
+  constructor(doc, manifest) {
+    this.doc=doc;this.manifest=manifest;this.board=new TargetBoard(doc.getElementById("target"),manifest);
+    this.sizes=new Map();this.current=null;this.entries=[];this.key=`${manifest.kit_id}-capture-log`;
+    for(const option of [...this.el("variant").options])if(!manifest.cases.some(c=>c.variant===Number(option.value)))option.remove();
+    try{this.entries=JSON.parse(localStorage.getItem(this.key)||"[]");}catch{}
+    this.bind();this.render();
+  }
+  el(id){return this.doc.getElementById(id);}
+  selected(){return this.manifest.cases.find(c=>c.id===`${this.el("profile").value}-V${this.el("variant").value}`);}
+  move(delta){
+    const e=this.el("profile"),next=Math.max(0,Math.min(e.options.length-1,e.selectedIndex+delta));
+    if(next===e.selectedIndex)return;
+    e.selectedIndex=next;this.el("repeat").value="1";this.render();
+  }
+  bind(){
+    for(const id of ["profile","variant"])this.el(id).addEventListener("change",()=>{this.el("repeat").value="1";this.render();});
+    for(const id of ["distance","repeat"])this.el(id).addEventListener("input",()=>this.labels());
+    this.el("cells").addEventListener("input",()=>{this.sizes.set(this.selected().id[0],Number(this.el("cells").value));this.el("measured").value="";this.render();});
+    this.el("previous").onclick=()=>this.move(-1);this.el("next").onclick=()=>this.move(1);
+    this.el("fullscreen").onclick=async()=>{try{if(this.doc.fullscreenElement)await this.doc.exitFullscreen();else await this.doc.documentElement.requestFullscreen();}catch{this.el("status").textContent="Use the browser's F11 full-screen command.";}};
+    this.el("record").onclick=()=>this.record();this.el("log").onclick=()=>this.save("capture_log.json",JSON.stringify({kit_id:this.manifest.kit_id,shots:this.entries},null,2),"application/json");
+    this.el("png").onclick=()=>{const a=this.doc.createElement("a");a.href=this.board.canvas.toDataURL("image/png");a.download=`${this.selected().id}.png`;a.click();};
+    window.addEventListener("resize",()=>this.render());
+    this.doc.addEventListener("keydown",e=>{if(["INPUT","SELECT","TEXTAREA"].includes(e.target.tagName))return;switch(e.key){case"ArrowRight":e.preventDefault();this.move(1);break;case"ArrowLeft":e.preventDefault();this.move(-1);break;case"1":case"2":case"3":case"4":this.el("profile").selectedIndex=Number(e.key)-1;this.render();break;}});
+  }
+  labels(){
+    const selector=this.el("profile"),first=selector.selectedIndex===0,last=selector.selectedIndex===selector.options.length-1;
+    this.el("previous").disabled=first;this.el("next").disabled=last;
+    this.el("navigation").textContent=`Target ${selector.selectedIndex+1} of ${selector.options.length}${last?" · Last target — Next stops here.":first?" · First target.":""}`;
+    const c=this.selected();this.el("title").textContent=`${c.id} · ${c.payload_bytes} bytes · ${c.profile.startsWith("turbo")?"NEW":"EXISTING DENSE"}`;
+    this.el("shot").textContent=`${Number(this.el("distance").value).toFixed(1)} m · shot ${this.el("repeat").value} · keep all four corner markers visible`;
+    this.el("comparison").textContent=c.id[0]==="A"?"A1 and A2: identical 128-byte payload, identical 50×50 grid and displayed area.":"B1 and B2: identical 94×94 grid and displayed area; 582 versus 800 useful bytes.";
+    this.el("logcount").textContent=`${this.entries.length} shot${this.entries.length===1?"":"s"} recorded on this browser.`;
+  }
+  render(){
+    const c=this.selected(),dpr=window.devicePixelRatio||1,view=this.el("viewport");
+    const max=Math.max(1,Math.floor(Math.min(view.clientWidth-12,view.clientHeight-12)*dpr/c.board_side_units));
+    const requested=this.sizes.get(c.id[0])||Math.min(6,max),pixels=Math.min(requested,max);
+    this.el("cells").max=String(Math.max(4,max));this.el("cells").value=String(pixels);
+    if(this.current&&(this.current.pixels!==pixels||this.current.dpr!==dpr||this.current.case.id[0]!==c.id[0]))this.el("measured").value="";
+    this.current={case:c,pixels,dpr};this.board.draw(c,pixels,dpr);
+    const width=(c.S+2*c.quiet)*pixels/dpr;
+    this.el("dimensions").textContent=`${pixels} screen px/module · ${width.toFixed(1)} CSS px across code + quiet margin. Keep the slider unchanged within each pair.`;
+    this.el("status").classList.toggle("error",pixels<4);
+    this.el("status").textContent=pixels<4?"Enlarge the window or use Full screen: fewer than 4 physical screen pixels/module. Do not start the distance sweep at this setting.":"Ready. White canvas and integer screen-pixel modules. Upload photographs for decoding; this page is a target viewer.";
+    this.labels();
+    window.requestAnimationFrame(()=>this.board.align(dpr));
+  }
+  record(){
+    if(Number(this.el("distance").value)<=0||Number(this.el("repeat").value)<1)return;
+    const {case:c,pixels,dpr}=this.current,measured=Number(this.el("measured").value)||null;
+    this.entries.push({target:c.id,distance_m:Number(this.el("distance").value),repeat:Number(this.el("repeat").value),screen_pixels_per_module:pixels,device_pixel_ratio:dpr,code_width_css_px:(c.S+2*c.quiet)*pixels/dpr,measured_code_width_mm:measured,timestamp:new Date().toISOString()});
+    try{localStorage.setItem(this.key,JSON.stringify(this.entries));}catch{}
+    this.el("repeat").value=String(Number(this.el("repeat").value)+1);this.labels();
+  }
+  save(name,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=this.doc.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+}
+new PhotoSession(document,JSON.parse(document.getElementById("manifest").textContent));
+})();
+</script>
+</body></html>

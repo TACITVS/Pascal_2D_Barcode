@@ -1,0 +1,113 @@
+[
+  {
+    "pitch": 1.0,
+    "blur": 0.7,
+    "frames": 6,
+    "stage_scales": [
+      2.0,
+      0.5,
+      1.0
+    ],
+    "stage_information_estimates": [
+      0.9849807636301384,
+      0.6725492453644447,
+      0.8557740538212413
+    ],
+    "per_frame_information": [
+      [
+        0.9999999999999564,
+        0.9639694602444171,
+        0.9759535942987767,
+        0.9999999999774036
+      ],
+      [
+        0.8219326791765189,
+        0.3485778144947379,
+        0.6999997153067656,
+        0.8196867724797563
+      ],
+      [
+        0.9600101359157431,
+        0.7351370143389053,
+        0.7842657182147632,
+        0.9436833468155531
+      ]
+    ],
+    "density_estimate": 0.6283260157039561,
+    "limits": "supplied geometry and blur; previous stages supplied correctly; no frame or ECC overhead"
+  },
+  {
+    "pitch": 1.2,
+    "blur": 0.7,
+    "frames": 6,
+    "stage_scales": [
+      1.0,
+      2.0,
+      0.5
+    ],
+    "stage_information_estimates": [
+      0.9999999999967703,
+      0.8971319394846156,
+      0.9474678560187171
+    ],
+    "per_frame_information": [
+      [
+        0.999999999987081,
+        1.0,
+        1.0,
+        1.0
+      ],
+      [
+        0.6272003621339082,
+        0.9999999993680712,
+        0.9620966009230952,
+        0.9992307955133878
+      ],
+      [
+        0.8249627988892003,
+        0.9890151616465968,
+        0.9830165572173677,
+        0.992876906321704
+      ]
+    ],
+    "density_estimate": 0.4938541311632123,
+    "limits": "supplied geometry and blur; previous stages supplied correctly; no frame or ECC overhead"
+  },
+  {
+    "pitch": 1.5,
+    "blur": 0.7,
+    "frames": 6,
+    "stage_scales": [
+      0.5,
+      2.0,
+      2.0
+    ],
+    "stage_information_estimates": [
+      1.0,
+      0.9999698782760168,
+      0.9999999776088716
+    ],
+    "per_frame_information": [
+      [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      [
+        1.0,
+        1.0,
+        0.9999999999999973,
+        0.9998795131040699
+      ],
+      [
+        1.0,
+        0.9999999999999828,
+        1.0,
+        0.9999999104355036
+      ]
+    ],
+    "density_estimate": 0.3333299839872098,
+    "limits": "supplied geometry and blur; previous stages supplied correctly; no frame or ECC overhead"
+  }
+]

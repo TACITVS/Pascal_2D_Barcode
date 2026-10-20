@@ -1,0 +1,72 @@
+{
+  "id": "PM257-DENSITY-VALIDATION-2026-10-19",
+  "trials_per_point": 640,
+  "seed": 900000,
+  "blur": 0.7,
+  "jitter": 0.25,
+  "noise": 6,
+  "jpeg": 75,
+  "calibration": "estimated",
+  "geometry": "supplied",
+  "rounds": 16,
+  "equalizer": "average",
+  "familywise_confidence": 0.95,
+  "source_sha256": "35496d1f89a9ebcfc17faba7dc40690db956d0bce77da38672f4d32c73ac5312",
+  "selections": [
+    [
+      128,
+      "turbo/0.55",
+      64
+    ],
+    [
+      128,
+      "turbo/0.55",
+      66
+    ],
+    [
+      128,
+      "turbo/0.55",
+      68
+    ],
+    [
+      128,
+      "standard/L",
+      76
+    ],
+    [
+      128,
+      "standard/L",
+      78
+    ],
+    [
+      128,
+      "dense/A",
+      80
+    ],
+    [
+      128,
+      "dense/A",
+      82
+    ],
+    [
+      512,
+      "turbo/0.65",
+      112
+    ],
+    [
+      512,
+      "turbo/0.65",
+      116
+    ],
+    [
+      512,
+      "dense/A",
+      128
+    ],
+    [
+      512,
+      "dense/A",
+      132
+    ]
+  ]
+}
