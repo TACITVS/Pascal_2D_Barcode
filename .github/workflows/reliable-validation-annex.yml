@@ -1,10 +1,6 @@
 name: Independent baseline reliability follow-up
 
 on:
-  pull_request:
-    paths:
-      - "research/density/reliable_validation_annex.json"
-      - ".github/workflows/reliable-validation-annex.yml"
   workflow_dispatch:
 
 permissions:
