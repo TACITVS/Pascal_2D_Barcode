@@ -149,18 +149,29 @@ The next substantial engineering problem is **self-calibration and blind
 reading of the four-level code**. Intermediate gray values need tone
 calibration; known black/white endpoints alone do not establish them on a
 real screen/printer/phone chain. The current Python prototype has supplied
-profile metadata and no frozen cross-language contract. Its speed and
-compatibility are not established as superior to standard scanners.
+profile metadata and no frozen cross-language contract. Recorded mean decoder times at the selected 800-byte points were about
+63 ms for the gray prototype and 7 ms for assisted QR-L/Data Matrix. These
+are observations from different CI jobs and implementations, not a controlled
+latency benchmark; the prototype currently pays more computation for density.
+Its compatibility is not established as superior to standard scanners.
 
 The earlier binary photograph viewer and published physical test protocol
 remain the binary reference. The new gray prototype needs a separately
 calibrated, frozen photographic experiment before replacing that reference.
 
+## Verification
+
+All original regression tests and 43 additional research checks pass. The
+report audit independently recomputes every interval, checks every stored
+trial outcome against its count, checks live receiver source digests against
+the measurement digests, and generates the figures with Matplotlib 3.11.2.
+[Report audit run](https://github.com/TACITVS/Pascal_2D_Barcode/actions/runs/39476179759).
+
 ## Reproduce
 
 From the repository root, using Python 3.12 and one BLAS thread:
 
-    python -m pip install -e ".[dev,bench]" "numpy==2.5.4" "scipy==1.18.1" "opencv-python-headless==5.0.0.93" "segno==1.6.6" "zxing-cpp==3.1.1" matplotlib
+    python -m pip install -e ".[dev,bench]" "numpy==2.5.4" "scipy==1.18.1" "opencv-python-headless==5.0.0.93" "segno==1.6.6" "zxing-cpp==3.1.1" "matplotlib==3.11.2"
     export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
     python -m pytest research/density/test_soft_outer.py research/density/test_reliable_density.py research/density/test_shaped_gray.py research/density/test_standard_assist.py research/density/test_validate_reliable.py
     python research/density/summarize_reliable.py

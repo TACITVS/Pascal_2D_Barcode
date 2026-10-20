@@ -28,7 +28,7 @@ jobs:
           python -m pip install -e ".[dev,bench]"
           "numpy==2.5.4" "scipy==1.18.1"
           "opencv-python-headless==5.0.0.93"
-          "segno==1.6.6" "zxing-cpp==3.1.1" "matplotlib>=3.10,<4"
+          "segno==1.6.6" "zxing-cpp==3.1.1" "matplotlib==3.11.2"
       - name: Audit per-trial counts, confidence accounting and figures
         run: python research/density/summarize_reliable.py --emit-svg
       - uses: actions/upload-artifact@v4
