@@ -2,7 +2,7 @@
 
 Geometric shaping uses levels 0, a, 1-a, 1, with independent LDPC rates for
 the coarse and fine bits. This is not probabilistic amplitude shaping:
-all four labels remain equiprobable. Geometry and linear tone calibration
+there is no distribution matcher or probability shaping. Geometry and linear tone calibration
 are supplied. Optical messages, LDPC posteriors and outer GMD are joint.
 """
 

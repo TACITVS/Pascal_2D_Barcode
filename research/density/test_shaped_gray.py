@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from research.density import shaped_gray, turbo
+from capacity import Channel, render
 
 
 @pytest.mark.parametrize("fine_weight", [0.18, 0.25, 1 / 3])
@@ -15,11 +16,11 @@ def test_image_roundtrip(fine_weight: float, length: int) -> None:
     v, grid = shaped_gray.encode(data, (0.85, 0.55), fine_weight)
     levels = np.unique(np.round(grid[2:-2, 2:-2], 6))
     assert np.allclose(levels, [0, fine_weight, 1 - fine_weight, 1])
-    image = np.repeat(np.repeat(225.0 - 200.0 * grid, 4, axis=0),
-                      4, axis=1)
-    centers = (np.arange(v.S) + 0.5) * 4
+    image, cx, cy = render(
+        np.pad(grid, 4), Channel(4.0, 0.7, 0.0, 0),
+        np.random.default_rng(984))
     result, _ = shaped_gray.decode(
-        v, image, centers, centers, 4.0, blur=0.7, rounds=8)
+        v, image, cx[4:-4], cy[4:-4], 4.0, blur=0.7, rounds=8)
     assert result == data
     info = turbo.encode_outer(v, data)
     assert turbo.decode_outer(v, info) == data
