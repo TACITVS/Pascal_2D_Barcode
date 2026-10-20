@@ -1,4 +1,4 @@
-"""PB-RELIABLE-2026-10-20-v2: registered noisy-image comparison.
+"""PB-RELIABLE-2026-10-20-v3: registered noisy-image comparison.
 
 This measures allocated physical area, not nominal module counts. Every
 receiver gets exact grid geometry, the actual blur and common endpoints.
@@ -25,11 +25,12 @@ import segno
 import zxingcpp
 
 try:
-    from . import shaped_gray, soft_outer, turbo
+    from . import shaped_gray, soft_outer, standard_assist, turbo
     from .hierarchical_probe import pixel_profile
 except ImportError:
     import shaped_gray
     import soft_outer
+    import standard_assist
     import turbo
     from hierarchical_probe import pixel_profile
 
@@ -161,14 +162,20 @@ def standard_decode(
         result = synthetic_read(hypothesis, format_id)
         if result is not None:
             return result, "lmmse_chase_" + str(pattern)
+    for method, hypothesis in standard_assist.candidates(
+            profile, image, cx, cy, pitch, blur, noise, llr):
+        result = synthetic_read(hypothesis, format_id)
+        if result is not None:
+            return result, method
     return None, "failed"
 
 
 def source_hashes() -> dict[str, str]:
     return {
-        name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+        name: hashlib.sha256(
+            Path(__file__).with_name(name).read_bytes()).hexdigest()
         for name in ("reliable_density.py", "soft_outer.py", "shaped_gray.py",
-                     "gray.py", "turbo.py")
+                     "gray.py", "standard_assist.py", "turbo.py")
     }
 
 
@@ -180,7 +187,7 @@ def run(
 ) -> dict[str, Any]:
     """Checkpoint each frame; exact byte comparison happens after decoding."""
     config = {
-        "experiment": "PB-RELIABLE-2026-10-20-v2",
+        "experiment": "PB-RELIABLE-2026-10-20-v3",
         "payload_bytes": payload, "widths": widths, "profiles": profiles,
         "trials": trials, "seed": seed, "rounds": rounds,
         "blur": blur, "noise": noise, "jpeg": jpeg, "blur_jitter": jitter,

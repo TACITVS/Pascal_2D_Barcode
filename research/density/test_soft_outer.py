@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import numpy as np
 import pytest
 
@@ -47,8 +49,6 @@ def test_tag_rejects_a_valid_rs_stream_with_bad_payload_tag() -> None:
     data = np.random.default_rng(90).bytes(128)
     v, _ = turbo.encode(data, 0.65)
     original = turbo.tag
-    from unittest.mock import patch
-
     with patch.object(turbo, "tag", return_value=b"\x00" * 8):
         info = turbo.encode_outer(v, data)
     assert original(data) != b"\x00" * 8
