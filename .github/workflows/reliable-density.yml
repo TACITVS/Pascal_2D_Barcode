@@ -1,17 +1,6 @@
 name: Public-pilot assisted density discovery
 
 on:
-  pull_request:
-    paths:
-      - "research/density/soft_outer.py"
-      - "research/density/test_soft_outer.py"
-      - "research/density/reliable_density.py"
-      - "research/density/test_reliable_density.py"
-      - "research/density/shaped_gray.py"
-      - "research/density/test_shaped_gray.py"
-      - "research/density/standard_assist.py"
-      - "research/density/test_standard_assist.py"
-      - ".github/workflows/reliable-density.yml"
   workflow_dispatch:
 
 permissions:
