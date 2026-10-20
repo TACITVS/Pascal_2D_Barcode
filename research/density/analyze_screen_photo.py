@@ -1,4 +1,4 @@
-"""PM257-PHOTO-READER-2026-10-19-v1.1: assisted screen-fixture analysis.
+"""PM257-PHOTO-READER-2026-10-19-v1.2: assisted screen-fixture analysis.
 
 External markers identify a target; optional cropped-image recovery locates
 its known timing frame. Both formats use the same registered crop.
@@ -24,8 +24,10 @@ from PIL import Image, ImageOps
 
 try:
     from .benchmark_density import reader2, turbo
+    from .photo_centers import decode_native_centers
 except ImportError:
     from benchmark_density import reader2, turbo
+    from photo_centers import decode_native_centers
 
 
 @dataclass(frozen=True)
@@ -194,7 +196,8 @@ def decode_crop(image: np.ndarray, pitch: float, case: dict[str, object]) -> tup
 
 
 def analyze(gray: np.ndarray, manifest: dict[str, object],
-            recover_cropped: bool = False) -> list[dict[str, object]]:
+            recover_cropped: bool = False,
+            receiver_fallback: bool = False) -> list[dict[str, object]]:
     rows = []
     registrations = register(gray, manifest)
     if not registrations and recover_cropped:
@@ -203,6 +206,11 @@ def analyze(gray: np.ndarray, manifest: dict[str, object],
         start = time.perf_counter()
         crop, pitch = rectify(gray, registration)
         decoded, details = decode_crop(crop, pitch, registration.case)
+        family, setting = str(registration.case["profile"]).split("/")
+        if decoded is None and receiver_fallback and family == "turbo":
+            decoded, fallback_details = decode_native_centers(
+                gray, registration.corners, int(registration.case["S"]), float(setting))
+            details["native_center_fallback"] = fallback_details
         expected = base64.b64decode(registration.case["payload_base64"])
         rows.append({"target": registration.case["id"], "profile": registration.case["profile"],
                      "payload_bytes": len(expected), "decoded_exactly": decoded == expected,
@@ -246,9 +254,12 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("/tmp/pascal-screen-reads.jsonl"))
     parser.add_argument("--recover-cropped", action="store_true",
                         help="identify clipped markers and locate the known barcode frame when marker registration fails")
+    parser.add_argument("--receiver-fallback", action="store_true",
+                        help="after a turbo failure, try native module centres and an unlabelled Otsu threshold")
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text())
-    source = hashlib.sha256((decoder_fingerprint() + str(args.recover_cropped)).encode()).hexdigest()
+    source = hashlib.sha256((decoder_fingerprint() + str(args.recover_cropped)
+                             + str(args.receiver_fallback)).encode()).hexdigest()
     manifest_hash = hashlib.sha256(args.manifest.read_bytes()).hexdigest()
     previous = [json.loads(line) for line in args.out.read_text().splitlines()] if args.out.exists() else []
     done = {(row["input_sha256"], row["decoder_sha256"], row.get("manifest_sha256")) for row in previous}
@@ -263,8 +274,10 @@ def main() -> None:
             try:
                 image = load_photo(path)
                 result = {"photo": path.name, "shape": list(image.shape),
-                          "reads": analyze(image, manifest, recover_cropped=args.recover_cropped),
-                          "recover_cropped": args.recover_cropped}
+                          "reads": analyze(image, manifest, recover_cropped=args.recover_cropped,
+                                           receiver_fallback=args.receiver_fallback),
+                          "recover_cropped": args.recover_cropped,
+                          "receiver_fallback": args.receiver_fallback}
             except (OSError, ValueError, RuntimeError) as exc:
                 result = {"photo": path.name, "error": str(exc), "reads": []}
             result.update({"input_sha256": checksum, "decoder_sha256": source,

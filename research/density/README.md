@@ -30,6 +30,54 @@ images are used only to identify markers. Payload decoding uses the original
 captured resolution after rectification. Report this recovery separately from
 the default marker-registration pipeline; it does not recover missing data bits.
 
+### Real screen photographs: development update, 2026-10-20
+
+An optional `--receiver-fallback` now tries native module-centre samples and
+an unlabelled Otsu intensity threshold after the optical turbo reader fails.
+The known frame supplies geometry and photometric calibration. The fallback
+uses the same global IRA code, outer code and integrity tag; it never receives
+the expected payload or true data grid. The HTML viewer and encoded patterns
+are unchanged. It supplements the original reader rather than replacing it;
+Otsu centre sampling also fails on some clean images that the optical reader
+handles successfully.
+
+On the supplied development photographs, exact useful-payload recovery is:
+
+| Approximate distance | Existing 128 B | New 128 B | Existing 582 B | New 800 B |
+|---|---:|---:|---:|---:|
+| 0.5 m | 1/1 | 1/1 | 1/1 | 1/1 |
+| 1.0 m | 2/2 | 2/2 | 3/3 | 1/2 |
+| 1.6 m | 1/1 | 1/1 | 0/1 | 0/1 |
+
+The original receiver recovered 0/1 of the close 800-byte photographs and 0/2
+of the 1.0 m 800-byte photographs. The fallback recovers the close example and
+one earlier 1.0 m example exactly. The 1.6 m results include exploratory
+frame-only registration because the published marker gate registered only
+one of those four images. These counts describe the supplied pixels, not a
+distance guarantee; captured size and preprocessing also matter.
+
+This establishes a real photographed 800-byte recovery in the same fixture
+layout as the 582-byte control. It does **not** establish a reliable 37.46%
+camera-density improvement: the fallback was selected on these development
+photos, there is only one close 800-byte capture, and one 1.0 m 800-byte image
+still fails. Fresh captures and reserved payload variants are needed after
+freezing the receiver. The earlier simulation validation is unchanged and
+does not validate this additional photo receiver.
+
+Reproduce an assisted read with:
+
+```bash
+python research/density/analyze_screen_photo.py photos/*.heic \
+  --manifest manifest.json --recover-cropped --receiver-fallback \
+  --out photo-results.jsonl
+```
+
+Both flags are opt-in. Default payload decoding is unchanged. The per-attempt
+log preserves the failed original attempt and the fallback result. The
+threshold-to-LLR scale is an empirical fixed setting, not a calibrated optical
+likelihood or a mathematical capacity result. No user photographs are included
+in this repository.
+
 ![Exact encoded patterns and density results](density_results.png)
 
 ## What changed
