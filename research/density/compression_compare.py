@@ -1,4 +1,4 @@
-"""PB-COMPARE-2026-10-20-v1: identical compression opportunities for 2D codes.
+"""PB-COMPARE-2026-10-20-v2: identical compression opportunities for 2D codes.
 
 This is an encoded-area and clean-roundtrip comparison, not a camera
 reliability benchmark. Every format gets the same five-byte application
@@ -150,7 +150,9 @@ def encode_profile(profile: str, packet: bytes) -> Encoded:
             return Encoded(np.asarray(qr.matrix, dtype=np.uint8), 4)
         case "datamatrix":
             wire = packet + turbo.tag(packet)
-            barcode = zxingcpp.create_barcode(wire, zxingcpp.BarcodeFormat.DataMatrix)
+            options = {} if setting == "binaryECI" else {"eci": "0"}
+            barcode = zxingcpp.create_barcode(
+                wire, zxingcpp.BarcodeFormat.DataMatrix, **options)
             image = np.asarray(barcode.to_image(scale=1, add_quiet_zones=False))
             return Encoded((image < 128).astype(np.uint8), 1)
         case _:
@@ -214,6 +216,8 @@ def markdown_report(document: dict[str, Any]) -> str:
     lines += [
         "", "The JSON contains every raw/adaptive result for Turbo rates .55/.65/.85,",
         "Dense-A, QR L/M/Q/H, and Data Matrix ECC200. Different ECC profiles do",
+        "Data Matrix ECC200 uses ECI 0 to suppress an optional binary-ECI identifier;",
+        "the default binary-ECI writer is also recorded as a sensitivity control.",
         "not imply equal robustness. The Data Matrix encoder may choose its",
         "supported shape; dimensions and area are both recorded.",
         "", "The common application envelope makes this a binary-payload comparison;",
@@ -234,7 +238,8 @@ def markdown_report(document: dict[str, Any]) -> str:
 def run(out: Path) -> dict[str, Any]:
     corpus = samples()
     profiles = ["turbo/0.55", "turbo/0.65", "turbo/0.85", "dense/A",
-                "qr/L", "qr/M", "qr/Q", "qr/H", "datamatrix/ECC200"]
+                "qr/L", "qr/M", "qr/Q", "qr/H", "datamatrix/ECC200",
+                "datamatrix/binaryECI"]
     rows: list[dict[str, Any]] = []
     descriptions: list[dict[str, Any]] = []
     started = time.perf_counter()
@@ -296,7 +301,7 @@ def run(out: Path) -> dict[str, Any]:
                           and r["representation"] == label]
             assert len({r["logical_wire_sha256"] for r in comparable}) == 1
     document = {
-        "experiment": "PB-COMPARE-2026-10-20-v1",
+        "experiment": "PB-COMPARE-2026-10-20-v2",
         "kind": "nominal_encoded_area_and_clean_roundtrip",
         "compression_header_bytes": 5, "common_integrity_bytes": 8,
         "external_dictionaries": False, "photographic_validation": False,
