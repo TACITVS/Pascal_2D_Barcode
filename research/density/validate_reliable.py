@@ -97,6 +97,11 @@ def validate(plan_path: Path, group_id: str, out: Path) -> dict[str, Any]:
         "minimum_read_rate": plan["minimum_read_rate"],
         **measured,
     }
+    if (plan.get("emit_interval_table")
+            and group_id == plan["annex_group_ids"][0]):
+        document["interval_table"] = [
+            interval(k, plan["trials"], plan["alpha"], plan["family_size"])
+            for k in range(plan["trials"] + 1)]
     out.write_text(json.dumps(document, indent=2) + "\n")
     print("RELIABILITY_VALIDATION_JSON "
           + json.dumps(document, separators=(",", ":")), flush=True)

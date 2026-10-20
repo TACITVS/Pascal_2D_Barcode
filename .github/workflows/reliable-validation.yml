@@ -1,11 +1,6 @@
 name: Frozen registered reliability validation
 
 on:
-  pull_request:
-    paths:
-      - "research/density/reliable_validation_plan.json"
-      - "research/density/validate_reliable.py"
-      - ".github/workflows/reliable-validation.yml"
   workflow_dispatch:
 
 permissions:
