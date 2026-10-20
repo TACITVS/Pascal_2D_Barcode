@@ -17,6 +17,16 @@ handout, revised according to the referee report of 2026-10-18.
 * **Encoder uses only additions mod 257** (Pascal's rule), with a proof that
   every payload fits into bytes (SPEC Theorem 1).
 
+## Four-level density research (2026-10-20)
+
+A separate configured Python prototype recovered 800 arbitrary bytes in
+1024/1024 fresh simulated images at width 128, versus the smallest tested
+qualifying widths of 160 for assisted Data Matrix and 168 for assisted QR-L.
+That is 56.25% and 72.27% higher density in the calibrated, registered model.
+This four-level result has no real-phone validation yet; see the
+[full comparison and limitations](research/density/RELIABLE_DENSITY.md).
+It is separate from the production formats and their guarantees.
+
 ## Try it
 
 Web app (make, save, and scan from a photo, or with the live camera where the

@@ -1,0 +1,181 @@
+{
+  "experiment": "PB-RELIABLE-VALIDATE-2026-10-20-v1",
+  "source_commit": "852586eb2031011f6f3666192b9fc721b0da536f",
+  "seed": 3000000,
+  "trials": 1024,
+  "rounds": 16,
+  "alpha": 0.05,
+  "family_size": 48,
+  "minimum_read_rate": 0.99,
+  "channel": {
+    "blur": 0.7,
+    "blur_jitter": 0.25,
+    "noise": 6,
+    "jpeg": 75
+  },
+  "geometry": "oracle_registered_axis_aligned",
+  "blur_supplied": "actual_oracle",
+  "compression": "common_raw_random_bytes",
+  "common_integrity_bytes": 8,
+  "area_includes_native_quiet_zones": true,
+  "photographic_validation": false,
+  "selection": "Predeclared finite operating points after binary and multilevel discovery; no validation-seed outcomes were examined. Widths are not asserted to be globally minimal. Every point and paired receiver contributes to the same confidence family.",
+  "frozen_paths": [
+    "research/density/reliable_density.py",
+    "research/density/standard_assist.py",
+    "research/density/soft_outer.py",
+    "research/density/shaped_gray.py",
+    "research/density/gray.py",
+    "research/density/turbo.py",
+    "research/density/hierarchical_probe.py",
+    "research/capacity.py",
+    "research/ldpc.py",
+    "research/v2/dense.py",
+    "pascal_mds/codec.py",
+    "pascal_mds/gf257.py",
+    "pascal_mds/syndrome.py",
+    "pascal_mds/layout.py"
+  ],
+  "groups": [
+    {
+      "id": "binary128",
+      "payload_bytes": 128,
+      "profile": "turbo/0.55",
+      "widths": [
+        64,
+        66,
+        68
+      ]
+    },
+    {
+      "id": "gray128",
+      "payload_bytes": 128,
+      "profile": "shaped/0.85+0.55+0.25",
+      "widths": [
+        64,
+        66,
+        68
+      ]
+    },
+    {
+      "id": "qrl128",
+      "payload_bytes": 128,
+      "profile": "qr/L",
+      "widths": [
+        72,
+        76,
+        80
+      ]
+    },
+    {
+      "id": "dm128",
+      "payload_bytes": 128,
+      "profile": "datamatrix/ECC200",
+      "widths": [
+        68,
+        72,
+        76
+      ]
+    },
+    {
+      "id": "binary800",
+      "payload_bytes": 800,
+      "profile": "turbo/0.85",
+      "widths": [
+        144,
+        152,
+        160
+      ]
+    },
+    {
+      "id": "gray800",
+      "payload_bytes": 800,
+      "profile": "shaped/0.85+0.55+0.25",
+      "widths": [
+        128,
+        136,
+        144
+      ]
+    },
+    {
+      "id": "qrl800",
+      "payload_bytes": 800,
+      "profile": "qr/L",
+      "widths": [
+        144,
+        160,
+        168
+      ]
+    },
+    {
+      "id": "dm800",
+      "payload_bytes": 800,
+      "profile": "datamatrix/ECC200",
+      "widths": [
+        144,
+        168,
+        176
+      ]
+    },
+    {
+      "id": "qrm128",
+      "payload_bytes": 128,
+      "profile": "qr/M",
+      "widths": [
+        66,
+        76,
+        84
+      ]
+    },
+    {
+      "id": "qrq128",
+      "payload_bytes": 128,
+      "profile": "qr/Q",
+      "widths": [
+        66,
+        80,
+        92
+      ]
+    },
+    {
+      "id": "qrh128",
+      "payload_bytes": 128,
+      "profile": "qr/H",
+      "widths": [
+        66,
+        80,
+        100
+      ]
+    },
+    {
+      "id": "qrm800",
+      "payload_bytes": 800,
+      "profile": "qr/M",
+      "widths": [
+        136,
+        168,
+        184
+      ]
+    },
+    {
+      "id": "qrq800",
+      "payload_bytes": 800,
+      "profile": "qr/Q",
+      "widths": [
+        136,
+        184,
+        216
+      ]
+    },
+    {
+      "id": "qrh800",
+      "payload_bytes": 800,
+      "profile": "qr/H",
+      "widths": [
+        136,
+        208,
+        240
+      ]
+    }
+  ]
+}

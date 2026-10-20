@@ -1,5 +1,11 @@
 # A different barcode format with measured density gains
 
+Latest research: [the four-level comparison](RELIABLE_DENSITY.md) adds a
+fresh, registered-channel study against assisted QR L/M/Q/H and Data Matrix.
+Its 800-byte gray prototype has higher measured density than this binary
+snapshot, while the 128-byte points tie. The earlier binary study and physical
+photograph reference below are retained as their own evidence.
+
 Research snapshot: 2026-10-19, based on main commit
 `281db3aab62ac72255c676e03d866613bd0bfc7d`.
 
